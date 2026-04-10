@@ -52,6 +52,20 @@ src/
   types/        - TypeScript type definitions
 ```
 
+## Git Hooks
+
+A pre-commit hook is provided to run CI checks (type check, lint, test, build) before each commit. To enable it:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+You can also run the checks manually at any time:
+
+```bash
+./scripts/pre-commit.sh
+```
+
 ## License
 
 Apache-2.0
