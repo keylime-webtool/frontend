@@ -16,6 +16,23 @@
   z-index: 10;
 }
 
+.layout__resize-handle {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: var(--sidebar-width);
+  width: 4px;
+  cursor: col-resize;
+  z-index: 11;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.layout__resize-handle:hover,
+.layout__resize-handle:active {
+  background: var(--color-primary);
+}
+
 .layout__main {
   flex: 1;
   margin-left: var(--sidebar-width);
