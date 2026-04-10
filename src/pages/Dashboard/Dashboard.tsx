@@ -5,7 +5,7 @@ import { KpiCard } from '@/components/common/KpiCard';
 import { attestationsApi } from '@/api/attestations';
 import { agentsApi } from '@/api/agents';
 import { alertsApi } from '@/api/alerts';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 
 const STATE_COLORS: Record<string, string> = {
   // Pull-mode states
@@ -24,8 +24,16 @@ const STATE_COLORS: Record<string, string> = {
   UNKNOWN: '#bdbdbd',
 };
 
+interface StateEntry {
+  name: string;
+  state: string;
+  mode: string;
+  value: number;
+}
+
 export function Dashboard() {
   const { timeRange } = useOutletContext<{ timeRange: string }>();
+  const navigate = useNavigate();
 
   const { data: agents } = useQuery({
     queryKey: ['agents', 'dashboard'],
@@ -50,13 +58,22 @@ export function Dashboard() {
     [agents]
   );
 
-  const stateDistribution = useMemo(() => {
-    const counts: Record<string, number> = {};
+  const stateDistribution: StateEntry[] = useMemo(() => {
+    const map = new Map<string, { state: string; mode: string; count: number }>();
     for (const agent of agentItems) {
       const state = agent.state ?? 'UNKNOWN';
-      counts[state] = (counts[state] ?? 0) + 1;
+      const mode = agent.attestation_mode ?? 'Unknown';
+      if (!map.has(state)) {
+        map.set(state, { state, mode, count: 0 });
+      }
+      map.get(state)!.count += 1;
     }
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+    return Array.from(map.values()).map(({ state, mode, count }) => ({
+      name: `${state} (${mode})`,
+      state,
+      mode,
+      value: count,
+    }));
   }, [agentItems]);
 
   return (
@@ -116,18 +133,33 @@ export function Dashboard() {
                 nameKey="name"
                 label={({ name, value }) => `${name} (${value})`}
                 labelLine
+                style={{ cursor: 'pointer' }}
+                onClick={(_data, index) => {
+                  const entry = stateDistribution[index];
+                  if (entry) {
+                    navigate(`/agents?state=${encodeURIComponent(entry.state)}`);
+                  }
+                }}
               >
                 {stateDistribution.map((entry) => (
                   <Cell
                     key={entry.name}
-                    fill={STATE_COLORS[entry.name] ?? STATE_COLORS.UNKNOWN}
+                    fill={STATE_COLORS[entry.state] ?? STATE_COLORS.UNKNOWN}
                   />
                 ))}
               </Pie>
               <Tooltip
                 formatter={(value: number, name: string) => [`${value} agent${value !== 1 ? 's' : ''}`, name]}
               />
-              <Legend />
+              <Legend
+                onClick={(e) => {
+                  const entry = stateDistribution.find((s) => s.name === e.value);
+                  if (entry) {
+                    navigate(`/agents?state=${encodeURIComponent(entry.state)}`);
+                  }
+                }}
+                formatter={(value) => <span style={{ cursor: 'pointer' }}>{value}</span>}
+              />
             </PieChart>
           </ResponsiveContainer>
         ) : (

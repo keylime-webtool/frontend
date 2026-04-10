@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TIME_RANGES } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -9,7 +10,17 @@ interface TopBarProps {
 
 export function TopBar({ selectedTimeRange, onTimeRangeChange }: TopBarProps) {
   const [search, setSearch] = useState('');
+  const navigate = useNavigate();
   const { user } = useAuth();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = search.trim();
+    if (q) {
+      navigate(`/agents?q=${encodeURIComponent(q)}`);
+      setSearch('');
+    }
+  };
 
   const initials = user?.name
     ? user.name
@@ -22,7 +33,7 @@ export function TopBar({ selectedTimeRange, onTimeRangeChange }: TopBarProps) {
   return (
     <header className="layout__topbar">
       <div className="topbar">
-        <div className="topbar__search">
+        <form className="topbar__search" onSubmit={handleSearch}>
           <span className="topbar__search-icon" aria-hidden="true">
             &#x1F50D;
           </span>
@@ -33,7 +44,7 @@ export function TopBar({ selectedTimeRange, onTimeRangeChange }: TopBarProps) {
             onChange={(e) => setSearch(e.target.value)}
             aria-label="Search agents"
           />
-        </div>
+        </form>
 
         <div className="topbar__spacer" />
 

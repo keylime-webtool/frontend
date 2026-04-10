@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { agentsApi } from '@/api/agents';
-import type { AgentState } from '@/types';
+import type { AgentListParams } from '@/types';
+
 
 interface AgentRow {
   id: string;
@@ -19,26 +20,43 @@ interface AgentRow {
 
 export function AgentList() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
-  const [stateFilter, setStateFilter] = useState<AgentState | ''>('');
-  const [search, setSearch] = useState('');
+  const [stateFilter, setStateFilter] = useState<string>(searchParams.get('state') ?? '');
+  const [search, setSearch] = useState(searchParams.get('q') ?? '');
+
+  // Sync search and state filter when URL query params change
+  useEffect(() => {
+    const q = searchParams.get('q') ?? '';
+    const state = searchParams.get('state') ?? '';
+    setSearch(q);
+    setStateFilter(state);
+    setPage(1);
+  }, [searchParams]);
+
+  const isSearchMode = search.trim().length > 0;
 
   const { data, isLoading } = useQuery({
     queryKey: ['agents', page, stateFilter, search],
-    queryFn: () =>
-      agentsApi.list({
+    queryFn: async () => {
+      if (isSearchMode) {
+        const res = await agentsApi.search(search.trim());
+        return res.data;
+      }
+      const res = await agentsApi.list({
         page,
         per_page: 25,
-        state: stateFilter || undefined,
-        search: search || undefined,
-      }),
-    select: (res) => res.data,
+        state: (stateFilter || undefined) as AgentListParams['state'],
+      });
+      return res.data;
+    },
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rawItems = (data as any)?.items ?? data;
   const items: AgentRow[] = Array.isArray(rawItems) ? rawItems : [];
-  const totalPages = data?.total_pages ?? 1;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const totalPages = (data as any)?.total_pages ?? 1;
 
   const columns = [
     {
@@ -81,7 +99,15 @@ export function AgentList() {
           type="search"
           placeholder="Search by UUID, hostname, or IP..."
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+            if (e.target.value) {
+              setSearchParams({ q: e.target.value });
+            } else {
+              setSearchParams({});
+            }
+          }}
           style={{
             flex: 1,
             padding: '8px 12px',
@@ -93,7 +119,18 @@ export function AgentList() {
         />
         <select
           value={stateFilter}
-          onChange={(e) => { setStateFilter(e.target.value as AgentState | ''); setPage(1); }}
+          onChange={(e) => {
+            const val = e.target.value;
+            setStateFilter(val);
+            setPage(1);
+            const next = new URLSearchParams(searchParams);
+            if (val) {
+              next.set('state', val);
+            } else {
+              next.delete('state');
+            }
+            setSearchParams(next);
+          }}
           style={{
             padding: '8px 12px',
             border: '1px solid var(--color-border)',
@@ -103,11 +140,21 @@ export function AgentList() {
           aria-label="Filter by state"
         >
           <option value="">All states</option>
-          <option value="get_quote">Get Quote</option>
-          <option value="failed">Failed</option>
-          <option value="retry">Retry</option>
-          <option value="registered">Registered</option>
-          <option value="terminated">Terminated</option>
+          <optgroup label="Pull Mode">
+            <option value="GET_QUOTE">Get Quote</option>
+            <option value="PROVIDE_V">Provide V</option>
+            <option value="REGISTERED">Registered</option>
+            <option value="FAILED">Failed</option>
+            <option value="RETRY">Retry</option>
+            <option value="TERMINATED">Terminated</option>
+            <option value="INVALID_QUOTE">Invalid Quote</option>
+            <option value="TENANT_FAILED">Tenant Failed</option>
+          </optgroup>
+          <optgroup label="Push Mode">
+            <option value="PASS">Pass</option>
+            <option value="FAIL">Fail</option>
+            <option value="PENDING">Pending</option>
+          </optgroup>
         </select>
       </div>
 

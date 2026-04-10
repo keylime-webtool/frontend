@@ -11,6 +11,10 @@ export const agentsApi = {
     return apiClient.get<Agent>(`/agents/${agentId}`);
   },
 
+  search(q: string) {
+    return apiClient.get<Agent[]>('/agents/search', { params: { q } });
+  },
+
   action(agentId: string, action: string) {
     return apiClient.post(`/agents/${agentId}/action`, { action });
   },
