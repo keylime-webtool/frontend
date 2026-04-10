@@ -24,7 +24,7 @@ export const agentsApi = {
   },
 
   pcrValues(agentId: string) {
-    return apiClient.get<AgentPcrValues>(`/agents/${agentId}/pcr-values`);
+    return apiClient.get<AgentPcrValues>(`/agents/${agentId}/pcr`);
   },
 
   imaLog(agentId: string, params?: { search?: string }) {

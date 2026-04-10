@@ -44,9 +44,8 @@ export interface AgentListParams {
 }
 
 export interface AgentPcrValues {
-  bank: string;
-  values: Record<string, string>;
-  expected: Record<string, string>;
+  hash_alg: string;
+  pcrs: Record<string, string>;
 }
 
 export interface ImaLogEntry {
