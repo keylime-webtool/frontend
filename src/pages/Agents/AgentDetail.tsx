@@ -189,16 +189,40 @@ function ImaTab({ agentId }: { agentId: string }) {
     select: (res) => res.data,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const entries = (data as any)?.entries ?? [];
+
   return (
     <div>
-      <h3 className="section__title">IMA Log ({data?.length ?? 0} entries)</h3>
-      <div className="placeholder">
-        <div className="placeholder__icon">&#x1F4DD;</div>
-        <div className="placeholder__text">IMA measurement list</div>
-        <div className="placeholder__subtext">
-          Searchable IMA log with policy match/mismatch indicators.
+      <h3 className="section__title">IMA Log ({entries.length} entries)</h3>
+      {entries.length > 0 ? (
+        <div className="data-table__wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th className="data-table__th">PCR</th>
+                <th className="data-table__th">Template</th>
+                <th className="data-table__th">File</th>
+                <th className="data-table__th">Hash</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.map((entry: { pcr: number; template_name: string; filename: string; filedata_hash: string }, i: number) => (
+                <tr key={i} className="data-table__row">
+                  <td className="data-table__td">{entry.pcr}</td>
+                  <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{entry.template_name}</td>
+                  <td className="data-table__td">{entry.filename}</td>
+                  <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '11px', wordBreak: 'break-all' }}>{entry.filedata_hash}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      ) : (
+        <div className="placeholder">
+          <div className="placeholder__text">No IMA log entries</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -210,16 +234,40 @@ function BootLogTab({ agentId }: { agentId: string }) {
     select: (res) => res.data,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const entries = (data as any)?.entries ?? [];
+
   return (
     <div>
-      <h3 className="section__title">Boot Log ({data?.length ?? 0} entries)</h3>
-      <div className="placeholder">
-        <div className="placeholder__icon">&#x1F4BB;</div>
-        <div className="placeholder__text">UEFI event log</div>
-        <div className="placeholder__subtext">
-          Measured boot validation entries with pass/fail status.
+      <h3 className="section__title">Boot Log ({entries.length} entries)</h3>
+      {entries.length > 0 ? (
+        <div className="data-table__wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th className="data-table__th">PCR</th>
+                <th className="data-table__th">Event Type</th>
+                <th className="data-table__th">Event Data</th>
+                <th className="data-table__th">Digest</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.map((entry: { pcr: number; event_type: string; event_data: string; digest: string }, i: number) => (
+                <tr key={i} className="data-table__row">
+                  <td className="data-table__td">{entry.pcr}</td>
+                  <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{entry.event_type}</td>
+                  <td className="data-table__td">{entry.event_data}</td>
+                  <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '11px', wordBreak: 'break-all' }}>{entry.digest}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      ) : (
+        <div className="placeholder">
+          <div className="placeholder__text">No boot log entries</div>
+        </div>
+      )}
     </div>
   );
 }
