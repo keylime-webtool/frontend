@@ -131,7 +131,35 @@ export function Dashboard() {
                 innerRadius={50}
                 dataKey="value"
                 nameKey="name"
-                label={({ name, value }) => `${name} (${value})`}
+                label={({ cx, cy, midAngle, outerRadius, name, value, index }: {
+                  cx: number; cy: number; midAngle: number; outerRadius: number;
+                  name: string; value: number; index: number;
+                }) => {
+                  const RADIAN = Math.PI / 180;
+                  const radius = outerRadius + 20;
+                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      fill={STATE_COLORS[stateDistribution[index]?.state] ?? STATE_COLORS.UNKNOWN}
+                      textAnchor={x > cx ? 'start' : 'end'}
+                      dominantBaseline="central"
+                      fontSize={12}
+                      style={{ cursor: 'pointer' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const entry = stateDistribution[index];
+                        if (entry) {
+                          navigate(`/agents?state=${encodeURIComponent(entry.state)}`);
+                        }
+                      }}
+                    >
+                      {`${name} (${value})`}
+                    </text>
+                  );
+                }}
                 labelLine
                 style={{ cursor: 'pointer' }}
                 onClick={(_data, index) => {
