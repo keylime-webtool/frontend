@@ -102,29 +102,6 @@ export function Dashboard() {
       </div>
 
       <div className="section">
-        <h2 className="section__title">Recent Alerts</h2>
-        <div className="placeholder">
-          <div className="placeholder__icon">&#x26A0;</div>
-          <div className="placeholder__text">Alert feed</div>
-          <div className="placeholder__subtext">
-            Real-time alerts will appear here once connected to the backend.
-            Each alert shows severity, affected agents, and recommended actions.
-          </div>
-        </div>
-      </div>
-
-      <div className="section">
-        <h2 className="section__title">Attestation Success Rate ({timeRange})</h2>
-        <div className="placeholder">
-          <div className="placeholder__icon">&#x1F4CA;</div>
-          <div className="placeholder__text">Timeline chart</div>
-          <div className="placeholder__subtext">
-            A time-series chart showing attestation success/failure rates over the selected time range.
-          </div>
-        </div>
-      </div>
-
-      <div className="section">
         <h2 className="section__title">Agent State Distribution</h2>
         {stateDistribution.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
@@ -159,6 +136,29 @@ export function Dashboard() {
             <div className="placeholder__text">No agents found</div>
           </div>
         )}
+      </div>
+
+      <div className="section">
+        <h2 className="section__title">Recent Alerts</h2>
+        <div className="placeholder">
+          <div className="placeholder__icon">&#x26A0;</div>
+          <div className="placeholder__text">Alert feed</div>
+          <div className="placeholder__subtext">
+            Real-time alerts will appear here once connected to the backend.
+            Each alert shows severity, affected agents, and recommended actions.
+          </div>
+        </div>
+      </div>
+
+      <div className="section">
+        <h2 className="section__title">Attestation Success Rate ({timeRange})</h2>
+        <div className="placeholder">
+          <div className="placeholder__icon">&#x1F4CA;</div>
+          <div className="placeholder__text">Timeline chart</div>
+          <div className="placeholder__subtext">
+            A time-series chart showing attestation success/failure rates over the selected time range.
+          </div>
+        </div>
       </div>
     </div>
   );
