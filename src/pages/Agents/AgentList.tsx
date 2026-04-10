@@ -4,7 +4,18 @@ import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { agentsApi } from '@/api/agents';
-import type { Agent, AgentState } from '@/types';
+import type { AgentState } from '@/types';
+
+interface AgentRow {
+  id: string;
+  ip: string;
+  state: string;
+  attestation_mode: string;
+  last_attestation: string | null;
+  assigned_policy: string;
+  failure_count: number;
+  [key: string]: unknown;
+}
 
 export function AgentList() {
   const navigate = useNavigate();
@@ -24,19 +35,27 @@ export function AgentList() {
     select: (res) => res.data,
   });
 
+  const items: AgentRow[] = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+  const totalPages = data?.total_pages ?? 1;
+
   const columns = [
-    { key: 'uuid', header: 'Agent ID', sortable: true },
-    { key: 'hostname', header: 'Hostname', sortable: true },
-    { key: 'ip_address', header: 'IP Address', sortable: true },
+    { key: 'id', header: 'Agent ID', sortable: true },
+    { key: 'ip', header: 'IP Address', sortable: true },
     {
       key: 'state',
       header: 'State',
       sortable: true,
-      render: (row: Agent) => <StatusBadge label={row.state} />,
+      render: (row: AgentRow) => <StatusBadge label={row.state} />,
     },
-    { key: 'ima_policy', header: 'Policy', sortable: true },
-    { key: 'last_attestation', header: 'Last Attestation', sortable: true },
-    { key: 'consecutive_failures', header: 'Failures', sortable: true },
+    { key: 'attestation_mode', header: 'Mode', sortable: true },
+    { key: 'assigned_policy', header: 'Policy', sortable: true },
+    {
+      key: 'last_attestation',
+      header: 'Last Attestation',
+      sortable: true,
+      render: (row: AgentRow) => <span>{row.last_attestation ?? '--'}</span>,
+    },
+    { key: 'failure_count', header: 'Failures', sortable: true },
   ];
 
   return (
@@ -87,14 +106,14 @@ export function AgentList() {
         </div>
       ) : (
         <>
-          <DataTable<Agent>
+          <DataTable<AgentRow>
             columns={columns}
-            data={Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []}
-            keyField="uuid"
-            onRowClick={(row) => navigate(`/agents/${row.uuid}`)}
+            data={items}
+            keyField="id"
+            onRowClick={(row) => navigate(`/agents/${row.id}`)}
             selectable
           />
-          {data && data.total_pages > 1 && (
+          {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -104,11 +123,11 @@ export function AgentList() {
                 Previous
               </button>
               <span style={{ padding: '6px 12px', fontSize: '14px' }}>
-                Page {page} of {data.total_pages}
+                Page {page} of {totalPages}
               </span>
               <button
-                onClick={() => setPage((p) => Math.min(data.total_pages, p + 1))}
-                disabled={page >= data.total_pages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
                 style={{ padding: '6px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)' }}
               >
                 Next

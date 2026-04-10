@@ -39,7 +39,7 @@ export function Dashboard() {
       <div className="kpi-grid">
         <KpiCard
           title="Total Agents"
-          value={agents?.total ?? '--'}
+          value={agents?.total_items ?? '--'}
           variant="default"
         />
         <KpiCard

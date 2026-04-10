@@ -15,10 +15,10 @@ export interface User {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
+  items: T[];
   page: number;
-  per_page: number;
+  page_size: number;
+  total_items: number;
   total_pages: number;
 }
 

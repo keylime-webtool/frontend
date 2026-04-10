@@ -18,7 +18,14 @@ apiClient.interceptors.request.use((config) => {
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Backend wraps all responses in: { success, data, error, timestamp, request_id }
+    // Unwrap the envelope so callers get the inner data directly.
+    if (response.data && typeof response.data === 'object' && 'success' in response.data) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
   async (error) => {
     if (error.response?.status === 401) {
       sessionStorage.removeItem('access_token');
