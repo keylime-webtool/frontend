@@ -14,6 +14,7 @@ interface AgentRow {
   attestation_mode: string;
   last_attestation: string | null;
   assigned_policy: string;
+  mb_policy: string | null;
   failure_count: number;
   [key: string]: unknown;
 }
@@ -77,7 +78,13 @@ export function AgentList() {
       sortable: true,
       render: (row: AgentRow) => <StatusBadge label={row.state} />,
     },
-    { key: 'assigned_policy', header: 'Policy', sortable: true },
+    { key: 'assigned_policy', header: 'IMA Policy', sortable: true },
+    {
+      key: 'mb_policy',
+      header: 'MB Policy',
+      sortable: true,
+      render: (row: AgentRow) => <span>{row.mb_policy ?? '--'}</span>,
+    },
     {
       key: 'last_attestation',
       header: 'Last Attestation',
