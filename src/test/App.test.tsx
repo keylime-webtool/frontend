@@ -31,9 +31,9 @@ describe('Sidebar', () => {
     expect(screen.getByText('Settings')).toBeDefined();
   });
 
-  it('renders the Keylime Monitor branding', () => {
+  it('renders the Keylime Dashboard branding', () => {
     renderWithProviders(<Sidebar />);
 
-    expect(screen.getByText('Keylime Monitor')).toBeDefined();
+    expect(screen.getByText('Keylime Dashboard')).toBeDefined();
   });
 });
