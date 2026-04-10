@@ -52,13 +52,13 @@ export function AgentList() {
       ),
     },
     { key: 'ip', header: 'IP Address', sortable: true },
+    { key: 'attestation_mode', header: 'Mode', sortable: true },
     {
       key: 'state',
       header: 'State',
       sortable: true,
       render: (row: AgentRow) => <StatusBadge label={row.state} />,
     },
-    { key: 'attestation_mode', header: 'Mode', sortable: true },
     { key: 'assigned_policy', header: 'Policy', sortable: true },
     {
       key: 'last_attestation',
