@@ -17,8 +17,8 @@ export function Sidebar() {
   return (
     <aside className="layout__sidebar">
       <div className="sidebar__logo">
-        <span className="sidebar__logo-icon">K</span>
-        Keylime Monitor
+        <img className="sidebar__logo-icon" src="/keylime-logo.png" alt="Keylime logo" />
+        Keylime Dashboard
       </div>
       <nav className="sidebar__nav" aria-label="Main navigation">
         {NAV_ITEMS.map((item) => (
