@@ -5,6 +5,11 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { policiesApi } from '@/api/policies';
 import type { Policy } from '@/types';
 
+const KIND_LABELS: Record<string, string> = {
+  ima: 'IMA',
+  measured_boot: 'Measured Boot',
+};
+
 export function Policies() {
   const [search, setSearch] = useState('');
 
@@ -17,11 +22,11 @@ export function Policies() {
   const columns = [
     { key: 'name', header: 'Name', sortable: true },
     {
-      key: 'type',
+      key: 'kind',
       header: 'Type',
       sortable: true,
       render: (row: Policy) => (
-        <StatusBadge label={row.type?.toUpperCase() ?? '--'} variant="info" />
+        <StatusBadge label={KIND_LABELS[row.kind] ?? row.kind ?? '--'} variant="info" />
       ),
     },
     { key: 'assigned_agents', header: 'Agents', sortable: true },
