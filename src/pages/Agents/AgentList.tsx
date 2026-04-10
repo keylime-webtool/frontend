@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -41,7 +41,16 @@ export function AgentList() {
   const totalPages = data?.total_pages ?? 1;
 
   const columns = [
-    { key: 'id', header: 'Agent ID', sortable: true },
+    {
+      key: 'id',
+      header: 'Agent ID',
+      sortable: true,
+      render: (row: AgentRow) => (
+        <Link to={`/agents/${row.id}`} style={{ fontFamily: 'monospace', fontSize: '13px' }}>
+          {row.id}
+        </Link>
+      ),
+    },
     { key: 'ip', header: 'IP Address', sortable: true },
     {
       key: 'state',
