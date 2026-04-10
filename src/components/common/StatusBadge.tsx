@@ -27,6 +27,8 @@ const VARIANT_MAP: Record<string, BadgeVariant> = {
   critical: 'danger',
   warning: 'warning',
   info: 'info',
+  // Push-mode agent states
+  pending: 'warning',
   // Generic
   pass: 'success',
   fail: 'danger',

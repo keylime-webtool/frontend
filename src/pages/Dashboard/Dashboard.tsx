@@ -8,6 +8,7 @@ import { alertsApi } from '@/api/alerts';
 import { useOutletContext } from 'react-router-dom';
 
 const STATE_COLORS: Record<string, string> = {
+  // Pull-mode states
   GET_QUOTE: '#34a853',
   PROVIDE_V: '#4285f4',
   REGISTERED: '#a0c4ff',
@@ -16,6 +17,10 @@ const STATE_COLORS: Record<string, string> = {
   TERMINATED: '#9e9e9e',
   INVALID_QUOTE: '#d93025',
   TENANT_FAILED: '#c62828',
+  // Push-mode states
+  PASS: '#34a853',
+  FAIL: '#ea4335',
+  PENDING: '#f9ab00',
   UNKNOWN: '#bdbdbd',
 };
 
