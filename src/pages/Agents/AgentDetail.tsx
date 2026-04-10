@@ -150,28 +150,29 @@ function PcrTab({ agentId }: { agentId: string }) {
     <div>
       <h3 className="section__title">PCR Values</h3>
       {data ? (
-        <table className="data-table" style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
-          <thead>
-            <tr>
-              <th className="data-table__th">PCR Index</th>
-              <th className="data-table__th">Current Value</th>
-              <th className="data-table__th">Expected Value</th>
-              <th className="data-table__th">Match</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(data.values).map(([idx, val]) => (
-              <tr key={idx}>
-                <td className="data-table__td">{idx}</td>
-                <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{val}</td>
-                <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{data.expected[idx] ?? '--'}</td>
-                <td className="data-table__td">
-                  <StatusBadge label={val === data.expected[idx] ? 'PASS' : 'FAIL'} />
-                </td>
+        <>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginBottom: '12px' }}>
+            Hash algorithm: <strong>{data.hash_alg}</strong>
+          </p>
+          <table className="data-table" style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
+            <thead>
+              <tr>
+                <th className="data-table__th">PCR Index</th>
+                <th className="data-table__th">Value</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {Object.entries(data.pcrs)
+                .sort(([a], [b]) => Number(a) - Number(b))
+                .map(([idx, val]) => (
+                  <tr key={idx}>
+                    <td className="data-table__td">{idx}</td>
+                    <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{val}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </>
       ) : (
         <div className="placeholder">
           <div className="placeholder__text">Loading PCR values...</div>
