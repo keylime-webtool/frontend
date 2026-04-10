@@ -24,21 +24,24 @@ export function AgentList() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [stateFilter, setStateFilter] = useState<string>(searchParams.get('state') ?? '');
+  const [modeFilter, setModeFilter] = useState<string>(searchParams.get('mode') ?? '');
   const [search, setSearch] = useState(searchParams.get('q') ?? '');
 
   // Sync search and state filter when URL query params change
   useEffect(() => {
     const q = searchParams.get('q') ?? '';
     const state = searchParams.get('state') ?? '';
+    const mode = searchParams.get('mode') ?? '';
     setSearch(q);
     setStateFilter(state);
+    setModeFilter(mode);
     setPage(1);
   }, [searchParams]);
 
   const isSearchMode = search.trim().length > 0;
 
   const { data, isLoading } = useQuery({
-    queryKey: ['agents', page, stateFilter, search],
+    queryKey: ['agents', page, stateFilter, modeFilter, search],
     queryFn: async () => {
       if (isSearchMode) {
         const res = await agentsApi.search(search.trim());
@@ -55,7 +58,10 @@ export function AgentList() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rawItems = (data as any)?.items ?? data;
-  const items: AgentRow[] = Array.isArray(rawItems) ? rawItems : [];
+  const allItems: AgentRow[] = Array.isArray(rawItems) ? rawItems : [];
+  const items = modeFilter
+    ? allItems.filter((a) => a.attestation_mode === modeFilter)
+    : allItems;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const totalPages = (data as any)?.total_pages ?? 1;
 
@@ -162,6 +168,32 @@ export function AgentList() {
             <option value="FAIL">Fail</option>
             <option value="PENDING">Pending</option>
           </optgroup>
+        </select>
+        <select
+          value={modeFilter}
+          onChange={(e) => {
+            const val = e.target.value;
+            setModeFilter(val);
+            setPage(1);
+            const next = new URLSearchParams(searchParams);
+            if (val) {
+              next.set('mode', val);
+            } else {
+              next.delete('mode');
+            }
+            setSearchParams(next);
+          }}
+          style={{
+            padding: '8px 12px',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '14px',
+          }}
+          aria-label="Filter by mode"
+        >
+          <option value="">All modes</option>
+          <option value="Pull">Pull</option>
+          <option value="Push">Push</option>
         </select>
       </div>
 
