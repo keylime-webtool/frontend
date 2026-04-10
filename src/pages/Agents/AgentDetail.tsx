@@ -4,10 +4,21 @@ import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { agentsApi } from '@/api/agents';
 
+interface AgentDetail {
+  id: string;
+  ip: string;
+  port: number;
+  state: string;
+  attestation_mode: string;
+  ima_policy: string | null;
+  mb_policy: string | null;
+  [key: string]: unknown;
+}
+
 const TABS = ['Timeline', 'PCR Values', 'IMA Log', 'Boot Log', 'Certificates', 'Raw Data'] as const;
 type Tab = (typeof TABS)[number];
 
-export function AgentDetail() {
+export function AgentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('Timeline');
@@ -15,7 +26,7 @@ export function AgentDetail() {
   const { data: agent, isLoading } = useQuery({
     queryKey: ['agent', id],
     queryFn: () => agentsApi.get(id!),
-    select: (res) => res.data,
+    select: (res) => res.data as unknown as AgentDetail,
     enabled: !!id,
   });
 
@@ -53,11 +64,12 @@ export function AgentDetail() {
         </button>
         <div>
           <h1 className="page-header__title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {agent.hostname || agent.uuid}
+            <span style={{ fontFamily: 'monospace', fontSize: '20px' }}>{agent.id ?? id}</span>
             <StatusBadge label={agent.state} />
           </h1>
           <p className="page-header__subtitle">
-            {agent.uuid} &middot; {agent.ip_address} &middot; API {agent.api_version}
+            {agent.ip}:{agent.port} &middot; {agent.attestation_mode} mode
+            {agent.ima_policy && <> &middot; Policy: {agent.ima_policy}</>}
           </p>
         </div>
       </div>
