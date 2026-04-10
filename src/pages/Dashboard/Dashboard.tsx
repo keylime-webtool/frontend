@@ -40,7 +40,10 @@ export function Dashboard() {
     select: (res) => res.data,
   });
 
-  const agentItems = Array.isArray(agents?.items) ? agents.items : Array.isArray(agents) ? agents : [];
+  const agentItems = useMemo(
+    () => Array.isArray(agents?.items) ? agents.items : Array.isArray(agents) ? agents : [],
+    [agents]
+  );
 
   const stateDistribution = useMemo(() => {
     const counts: Record<string, number> = {};
