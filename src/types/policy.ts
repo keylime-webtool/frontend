@@ -1,4 +1,4 @@
-export type PolicyType = 'ima' | 'mb';
+export type PolicyKind = 'ima' | 'measured_boot';
 
 export type ApprovalState =
   | 'draft'
@@ -20,7 +20,7 @@ export interface PolicyVersion {
 export interface Policy {
   id: string;
   name: string;
-  type: PolicyType;
+  kind: PolicyKind;
   content: string;
   checksum: string;
   hash_algorithm: HashAlgorithm;
