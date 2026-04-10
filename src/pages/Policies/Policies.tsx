@@ -96,7 +96,7 @@ export function Policies() {
       ) : (
         <DataTable<Policy>
           columns={columns}
-          data={Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []}
+          data={Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []}
           keyField="id"
         />
       )}

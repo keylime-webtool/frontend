@@ -35,7 +35,9 @@ export function AgentList() {
     select: (res) => res.data,
   });
 
-  const items: AgentRow[] = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawItems = (data as any)?.items ?? data;
+  const items: AgentRow[] = Array.isArray(rawItems) ? rawItems : [];
   const totalPages = data?.total_pages ?? 1;
 
   const columns = [

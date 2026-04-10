@@ -1,7 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useOutletContext } from 'react-router-dom';
 import { KpiCard } from '@/components/common/KpiCard';
+import { StatusBadge } from '@/components/common/StatusBadge';
 import { attestationsApi } from '@/api/attestations';
+
+interface FailureEvent {
+  agent_id: string;
+  detail: string;
+  failure_type: string;
+  severity: string;
+  timestamp: string;
+}
 
 export function Attestations() {
   const { timeRange } = useOutletContext<{ timeRange: string }>();
@@ -50,19 +59,23 @@ export function Attestations() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
         <div className="section">
           <h2 className="section__title">Failure Categorization</h2>
-          {failures && failures.length > 0 ? (
+          {Array.isArray(failures) && failures.length > 0 ? (
             <ul style={{ listStyle: 'none', padding: 0 }}>
-              {failures.map((f) => (
-                <li key={f.type} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--color-border)' }}>
-                  <span style={{ textTransform: 'capitalize' }}>{f.type.replace(/_/g, ' ')}</span>
-                  <span style={{ fontWeight: 600 }}>{f.count} ({f.percentage.toFixed(1)}%)</span>
+              {(failures as unknown as FailureEvent[]).map((f, i) => (
+                <li key={f.agent_id + i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--color-border)' }}>
+                  <div>
+                    <div style={{ fontWeight: 500 }}>{(f.failure_type ?? '').replace(/_/g, ' ')}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>{f.detail ?? ''}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', fontFamily: 'monospace' }}>{f.agent_id}</div>
+                  </div>
+                  <StatusBadge label={f.severity} />
                 </li>
               ))}
             </ul>
           ) : (
             <div className="placeholder">
               <div className="placeholder__icon">&#x1F4CA;</div>
-              <div className="placeholder__text">Failure breakdown donut chart</div>
+              <div className="placeholder__text">No failures recorded</div>
             </div>
           )}
         </div>

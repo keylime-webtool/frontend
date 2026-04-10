@@ -87,7 +87,7 @@ export function Certificates() {
       ) : (
         <DataTable<Certificate>
           columns={columns}
-          data={Array.isArray(certs?.data) ? certs.data : Array.isArray(certs) ? certs : []}
+          data={Array.isArray(certs?.items) ? certs.items : Array.isArray(certs) ? certs : []}
           keyField="id"
           selectable
         />

@@ -1,17 +1,30 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { KpiCard } from '@/components/common/KpiCard';
-import { StatusBadge } from '@/components/common/StatusBadge';
 import { attestationsApi } from '@/api/attestations';
 import { agentsApi } from '@/api/agents';
 import { alertsApi } from '@/api/alerts';
 import { useOutletContext } from 'react-router-dom';
 
+const STATE_COLORS: Record<string, string> = {
+  GET_QUOTE: '#34a853',
+  PROVIDE_V: '#4285f4',
+  REGISTERED: '#a0c4ff',
+  FAILED: '#ea4335',
+  RETRY: '#f9ab00',
+  TERMINATED: '#9e9e9e',
+  INVALID_QUOTE: '#d93025',
+  TENANT_FAILED: '#c62828',
+  UNKNOWN: '#bdbdbd',
+};
+
 export function Dashboard() {
   const { timeRange } = useOutletContext<{ timeRange: string }>();
 
   const { data: agents } = useQuery({
-    queryKey: ['agents', 'list'],
-    queryFn: () => agentsApi.list({ per_page: 1 }),
+    queryKey: ['agents', 'dashboard'],
+    queryFn: () => agentsApi.list({ per_page: 100 }),
     select: (res) => res.data,
   });
 
@@ -27,6 +40,17 @@ export function Dashboard() {
     select: (res) => res.data,
   });
 
+  const agentItems = Array.isArray(agents?.items) ? agents.items : Array.isArray(agents) ? agents : [];
+
+  const stateDistribution = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const agent of agentItems) {
+      const state = agent.state ?? 'UNKNOWN';
+      counts[state] = (counts[state] ?? 0) + 1;
+    }
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [agentItems]);
+
   return (
     <div>
       <div className="page-header">
@@ -39,7 +63,7 @@ export function Dashboard() {
       <div className="kpi-grid">
         <KpiCard
           title="Total Agents"
-          value={agents?.total_items ?? '--'}
+          value={agents?.total_items ?? (agentItems.length || '--')}
           variant="default"
         />
         <KpiCard
@@ -94,20 +118,39 @@ export function Dashboard() {
 
       <div className="section">
         <h2 className="section__title">Agent State Distribution</h2>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <StatusBadge label="GET_QUOTE" />
-          <StatusBadge label="FAILED" />
-          <StatusBadge label="RETRY" />
-          <StatusBadge label="REGISTERED" />
-          <StatusBadge label="TERMINATED" />
-        </div>
-        <div className="placeholder" style={{ paddingTop: '30px' }}>
-          <div className="placeholder__icon">&#x25EF;</div>
-          <div className="placeholder__text">State distribution pie chart</div>
-          <div className="placeholder__subtext">
-            Agent count by state with color-coded segments.
+        {stateDistribution.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={stateDistribution}
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                innerRadius={50}
+                dataKey="value"
+                nameKey="name"
+                label={({ name, value }) => `${name} (${value})`}
+                labelLine
+              >
+                {stateDistribution.map((entry) => (
+                  <Cell
+                    key={entry.name}
+                    fill={STATE_COLORS[entry.name] ?? STATE_COLORS.UNKNOWN}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value: number, name: string) => [`${value} agent${value !== 1 ? 's' : ''}`, name]}
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="placeholder">
+            <div className="placeholder__icon">&#x25EF;</div>
+            <div className="placeholder__text">No agents found</div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

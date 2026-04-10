@@ -141,7 +141,7 @@ export function Alerts() {
       ) : (
         <DataTable<Alert>
           columns={columns}
-          data={Array.isArray(alerts?.data) ? alerts.data : Array.isArray(alerts) ? alerts : []}
+          data={Array.isArray(alerts?.items) ? alerts.items : Array.isArray(alerts) ? alerts : []}
           keyField="id"
         />
       )}
