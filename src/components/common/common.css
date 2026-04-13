@@ -177,6 +177,25 @@
   margin-bottom: 24px;
 }
 
+/* Charts row — side by side on wide screens, stacked on narrow */
+.charts-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.charts-row > .section {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .charts-row {
+    flex-direction: column;
+  }
+}
+
 /* Section */
 .section {
   background: var(--color-surface);
