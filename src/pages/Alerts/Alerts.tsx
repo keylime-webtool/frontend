@@ -102,9 +102,47 @@ export function Alerts() {
       </div>
 
       <div className="kpi-grid">
-        <KpiCard title="Critical" value={summary?.critical ?? '--'} variant="danger" />
-        <KpiCard title="Warnings" value={summary?.warnings ?? '--'} variant="warning" />
-        <KpiCard title="Resolved (24h)" value={summary?.resolved_24h ?? '--'} variant="success" />
+        <KpiCard
+          title="Critical"
+          value={summary?.critical ?? '--'}
+          variant="danger"
+          onClick={() => { setSeverityFilter('critical'); setStateFilter(''); }}
+        />
+        <KpiCard
+          title="Warnings"
+          value={summary?.warnings ?? '--'}
+          variant="warning"
+          onClick={() => { setSeverityFilter('warning'); setStateFilter(''); }}
+        />
+        <KpiCard
+          title="Info"
+          value={summary?.info ?? '--'}
+          variant="info"
+          onClick={() => { setSeverityFilter('info'); setStateFilter(''); }}
+        />
+        <KpiCard
+          title="Resolved"
+          value={summary?.resolved_24h ?? '--'}
+          variant="success"
+          onClick={() => { setStateFilter('resolved'); setSeverityFilter(''); }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '12px 0' }}>
+        <button
+          onClick={() => { setSeverityFilter(''); setStateFilter(''); }}
+          style={{
+            padding: '8px 16px',
+            fontSize: '14px',
+            fontWeight: 500,
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--color-surface)',
+            cursor: 'pointer',
+          }}
+        >
+          Show All Alerts
+        </button>
       </div>
 
       <div className="section" style={{ display: 'flex', gap: '12px', padding: '12px 20px' }}>
