@@ -16,10 +16,10 @@ const NAV_ITEMS = [
 export function Sidebar() {
   return (
     <aside className="layout__sidebar">
-      <div className="sidebar__logo">
+      <NavLink to="/" className="sidebar__logo" style={{ textDecoration: 'none' }}>
         <img className="sidebar__logo-icon" src="/keylime-logo.png" alt="Keylime logo" />
         Keylime Dashboard
-      </div>
+      </NavLink>
       <nav className="sidebar__nav" aria-label="Main navigation">
         {NAV_ITEMS.map((item) => (
           <NavLink
