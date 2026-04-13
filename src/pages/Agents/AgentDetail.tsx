@@ -57,6 +57,7 @@ export function AgentDetailPage() {
             borderRadius: 'var(--radius-sm)',
             padding: '6px 12px',
             fontSize: '14px',
+            color: 'var(--color-text)',
           }}
           aria-label="Back to agents list"
         >
