@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { AgentStateChart } from '@/components/common/AgentStateChart';
 import { agentsApi } from '@/api/agents';
 import type { AgentListParams } from '@/types';
 
@@ -105,6 +106,11 @@ export function AgentList() {
       <div className="page-header">
         <h1 className="page-header__title">Agents</h1>
         <p className="page-header__subtitle">Manage and monitor Keylime agents across your fleet</p>
+      </div>
+
+      <div className="section">
+        <h2 className="section__title">Agent State Distribution</h2>
+        <AgentStateChart />
       </div>
 
       <div className="section" style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '12px 20px' }}>
