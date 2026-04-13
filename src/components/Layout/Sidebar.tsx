@@ -3,10 +3,10 @@ import { NavLink } from 'react-router-dom';
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: '\u2302' },
   { path: '/agents', label: 'Agents', icon: '\u2630' },
-  { path: '/attestations', label: 'Attestations', icon: '\u2713' },
   { path: '/policies', label: 'Policies', icon: '\u2637' },
-  { path: '/certificates', label: 'Certificates', icon: '\u229A' },
   { path: '/alerts', label: 'Alerts', icon: '\u26A0' },
+  { path: '/attestations', label: 'Attestations', icon: '\u2713' },
+  { path: '/certificates', label: 'Certificates', icon: '\u229A' },
   { path: '/performance', label: 'Performance', icon: '\u2261' },
   { path: '/audit', label: 'Audit Log', icon: '\u2338' },
   { path: '/integrations', label: 'Integrations', icon: '\u2B82' },
