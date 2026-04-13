@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
 import { KpiCard } from '@/components/common/KpiCard';
 import { attestationsApi } from '@/api/attestations';
 import { agentsApi } from '@/api/agents';
@@ -265,9 +265,6 @@ export function Dashboard() {
                   />
                 ))}
               </Pie>
-              <Tooltip
-                formatter={(value: number, name: string) => [`${value} agent${value !== 1 ? 's' : ''}`, name]}
-              />
               <Legend
                 content={({ payload }) => {
                   if (!payload) return null;
@@ -406,12 +403,6 @@ export function Dashboard() {
                   />
                 ))}
               </Pie>
-              <Tooltip
-                formatter={(value: number, name: string) => [
-                  `${value} alert${value !== 1 ? 's' : ''}`,
-                  name.replace(/_/g, ' '),
-                ]}
-              />
               <Legend
                 formatter={(value: string) => (
                   <span style={{ textTransform: 'capitalize', cursor: 'pointer' }}>
