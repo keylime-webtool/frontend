@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useVisualizationStore } from '@/store/visualizationStore';
+import { TIME_RANGES } from '@/types';
 
 const COMPLIANCE_FRAMEWORKS = [
   'NIST SP 800-155/193',
@@ -9,11 +11,44 @@ const COMPLIANCE_FRAMEWORKS = [
   'CIS Controls v8',
 ];
 
+const REFRESH_INTERVALS = [10, 15, 30, 60, 120];
+const PAGE_SIZES = [10, 25, 50, 100];
+
+const settingRowStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '14px 0',
+  borderBottom: '1px solid var(--color-border)',
+};
+
+const settingLabelStyle: React.CSSProperties = {
+  fontSize: '14px',
+  fontWeight: 500,
+};
+
+const settingDescStyle: React.CSSProperties = {
+  fontSize: '12px',
+  color: 'var(--color-text-secondary)',
+  marginTop: '2px',
+};
+
+const selectStyle: React.CSSProperties = {
+  padding: '6px 12px',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-sm)',
+  fontSize: '14px',
+  background: 'var(--color-surface)',
+  color: 'var(--color-text)',
+};
+
 export function Settings() {
   const { user, isAdmin } = useAuth();
-  const [activeSection, setActiveSection] = useState('compliance');
+  const [activeSection, setActiveSection] = useState('visualization');
+  const viz = useVisualizationStore();
 
   const sections = [
+    { key: 'visualization', label: 'Visualization' },
     { key: 'compliance', label: 'Compliance Reports' },
     { key: 'alerts', label: 'Alert Thresholds' },
     { key: 'integrations', label: 'External Integrations' },
@@ -55,6 +90,108 @@ export function Settings() {
         </div>
 
         <div style={{ flex: 1 }}>
+          {activeSection === 'visualization' && (
+            <div className="section">
+              <h2 className="section__title">Visualization Settings</h2>
+              <div>
+                <div style={settingRowStyle}>
+                  <div>
+                    <div style={settingLabelStyle}>Theme</div>
+                    <div style={settingDescStyle}>Switch between light and dark appearance</div>
+                  </div>
+                  <select
+                    value={viz.theme}
+                    onChange={(e) => viz.setTheme(e.target.value as 'light' | 'dark')}
+                    style={selectStyle}
+                    aria-label="Theme"
+                  >
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                  </select>
+                </div>
+
+                <div style={settingRowStyle}>
+                  <div>
+                    <div style={settingLabelStyle}>Auto-refresh</div>
+                    <div style={settingDescStyle}>Automatically refresh dashboard data</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={viz.autoRefresh}
+                    onChange={(e) => viz.setAutoRefresh(e.target.checked)}
+                    aria-label="Auto-refresh toggle"
+                    style={{ width: 18, height: 18 }}
+                  />
+                </div>
+
+                <div style={settingRowStyle}>
+                  <div>
+                    <div style={settingLabelStyle}>Refresh interval</div>
+                    <div style={settingDescStyle}>Seconds between data refreshes</div>
+                  </div>
+                  <select
+                    value={viz.refreshInterval}
+                    onChange={(e) => viz.setRefreshInterval(Number(e.target.value))}
+                    style={selectStyle}
+                    aria-label="Refresh interval"
+                  >
+                    {REFRESH_INTERVALS.map((s) => (
+                      <option key={s} value={s}>{s}s</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={settingRowStyle}>
+                  <div>
+                    <div style={settingLabelStyle}>Default time range</div>
+                    <div style={settingDescStyle}>Initial time window when loading the dashboard</div>
+                  </div>
+                  <select
+                    value={viz.defaultTimeRange}
+                    onChange={(e) => viz.setDefaultTimeRange(e.target.value)}
+                    style={selectStyle}
+                    aria-label="Default time range"
+                  >
+                    {TIME_RANGES.map((r) => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={settingRowStyle}>
+                  <div>
+                    <div style={settingLabelStyle}>Chart labels</div>
+                    <div style={settingDescStyle}>Show text labels on pie chart slices</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={viz.showChartLabels}
+                    onChange={(e) => viz.setShowChartLabels(e.target.checked)}
+                    aria-label="Show chart labels"
+                    style={{ width: 18, height: 18 }}
+                  />
+                </div>
+
+                <div style={{ ...settingRowStyle, borderBottom: 'none' }}>
+                  <div>
+                    <div style={settingLabelStyle}>Table page size</div>
+                    <div style={settingDescStyle}>Default number of rows per table page</div>
+                  </div>
+                  <select
+                    value={viz.tablePageSize}
+                    onChange={(e) => viz.setTablePageSize(Number(e.target.value))}
+                    style={selectStyle}
+                    aria-label="Table page size"
+                  >
+                    {PAGE_SIZES.map((n) => (
+                      <option key={n} value={n}>{n} rows</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeSection === 'compliance' && (
             <div className="section">
               <h2 className="section__title">Compliance Framework Reports</h2>
