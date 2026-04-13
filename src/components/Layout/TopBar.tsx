@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { TIME_RANGES } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
+import { alertsApi } from '@/api/alerts';
 
 interface TopBarProps {
   selectedTimeRange: string;
@@ -21,6 +23,14 @@ export function TopBar({ selectedTimeRange, onTimeRangeChange }: TopBarProps) {
       setSearch('');
     }
   };
+
+  const { data: alertSummary } = useQuery({
+    queryKey: ['alerts', 'summary'],
+    queryFn: () => alertsApi.summary(),
+    select: (res) => res.data,
+  });
+
+  const alertCount = (alertSummary?.critical ?? 0) + (alertSummary?.warnings ?? 0);
 
   const initials = user?.name
     ? user.name
@@ -62,9 +72,13 @@ export function TopBar({ selectedTimeRange, onTimeRangeChange }: TopBarProps) {
           ))}
         </div>
 
-        <button className="topbar__notifications" aria-label="Notifications">
+        <button
+          className="topbar__notifications"
+          aria-label="Notifications"
+          onClick={() => navigate('/alerts')}
+        >
           &#x1F514;
-          <span className="topbar__badge">0</span>
+          {alertCount > 0 && <span className="topbar__badge">{alertCount}</span>}
         </button>
 
         <button className="topbar__user" aria-label="User menu">
