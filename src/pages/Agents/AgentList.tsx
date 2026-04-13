@@ -123,6 +123,7 @@ export function AgentList() {
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-sm)',
             background: 'var(--color-surface)',
+            color: 'var(--color-text)',
             cursor: 'pointer',
           }}
         >
