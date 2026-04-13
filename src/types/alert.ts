@@ -39,5 +39,6 @@ export interface Alert {
 export interface AlertSummary {
   critical: number;
   warnings: number;
+  info?: number;
   resolved_24h: number;
 }
