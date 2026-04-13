@@ -103,14 +103,31 @@ export function AgentList() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-header__title">Agents</h1>
-        <p className="page-header__subtitle">Manage and monitor Keylime agents across your fleet</p>
-      </div>
-
-      <div className="section">
-        <h2 className="section__title">Agent State Distribution</h2>
-        <AgentStateChart />
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 className="page-header__title">Agents</h1>
+          <p className="page-header__subtitle">Manage and monitor Keylime agents across your fleet</p>
+        </div>
+        <button
+          onClick={() => {
+            setSearch('');
+            setStateFilter('');
+            setModeFilter('');
+            setPage(1);
+            setSearchParams({});
+          }}
+          style={{
+            padding: '8px 16px',
+            fontSize: '14px',
+            fontWeight: 500,
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--color-surface)',
+            cursor: 'pointer',
+          }}
+        >
+          Show All Agents
+        </button>
       </div>
 
       <div className="section" style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '12px 20px' }}>
@@ -239,6 +256,11 @@ export function AgentList() {
           )}
         </>
       )}
+
+      <div className="section">
+        <h2 className="section__title">Agent State Distribution</h2>
+        <AgentStateChart />
+      </div>
     </div>
   );
 }
