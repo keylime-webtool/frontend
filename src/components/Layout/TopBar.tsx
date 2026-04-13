@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { TIME_RANGES } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { alertsApi } from '@/api/alerts';
+import { useVisualizationStore } from '@/store/visualizationStore';
 
 interface TopBarProps {
   selectedTimeRange: string;
@@ -14,6 +15,7 @@ export function TopBar({ selectedTimeRange, onTimeRangeChange }: TopBarProps) {
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme, setTheme } = useVisualizationStore();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +81,15 @@ export function TopBar({ selectedTimeRange, onTimeRangeChange }: TopBarProps) {
         >
           &#x1F514;
           {alertCount > 0 && <span className="topbar__badge">{alertCount}</span>}
+        </button>
+
+        <button
+          className="topbar__theme-toggle"
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+        >
+          {theme === 'light' ? '\u263E' : '\u2600'}
         </button>
 
         <button className="topbar__user" aria-label="User menu">
