@@ -24,6 +24,11 @@ const STATE_COLORS: Record<string, string> = {
   UNKNOWN: '#bdbdbd',
 };
 
+const PULL_STATES = new Set([
+  'GET_QUOTE', 'PROVIDE_V', 'REGISTERED', 'FAILED',
+  'RETRY', 'TERMINATED', 'INVALID_QUOTE', 'TENANT_FAILED',
+]);
+
 interface StateEntry {
   name: string;
   state: string;
@@ -123,6 +128,26 @@ export function Dashboard() {
         {stateDistribution.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
+              <defs>
+                {stateDistribution
+                  .filter((entry) => PULL_STATES.has(entry.state))
+                  .map((entry) => {
+                    const color = STATE_COLORS[entry.state] ?? STATE_COLORS.UNKNOWN;
+                    return (
+                      <pattern
+                        key={entry.state}
+                        id={`stripe-${entry.state}`}
+                        width={6}
+                        height={6}
+                        patternUnits="userSpaceOnUse"
+                        patternTransform="rotate(45)"
+                      >
+                        <rect width={3} height={6} fill="white" />
+                        <rect x={3} width={3} height={6} fill={color} />
+                      </pattern>
+                    );
+                  })}
+              </defs>
               <Pie
                 data={stateDistribution}
                 cx="50%"
@@ -172,7 +197,13 @@ export function Dashboard() {
                 {stateDistribution.map((entry) => (
                   <Cell
                     key={entry.name}
-                    fill={STATE_COLORS[entry.state] ?? STATE_COLORS.UNKNOWN}
+                    fill={
+                      PULL_STATES.has(entry.state)
+                        ? `url(#stripe-${entry.state})`
+                        : (STATE_COLORS[entry.state] ?? STATE_COLORS.UNKNOWN)
+                    }
+                    stroke={STATE_COLORS[entry.state] ?? STATE_COLORS.UNKNOWN}
+                    strokeWidth={1}
                   />
                 ))}
               </Pie>
@@ -180,13 +211,59 @@ export function Dashboard() {
                 formatter={(value: number, name: string) => [`${value} agent${value !== 1 ? 's' : ''}`, name]}
               />
               <Legend
-                onClick={(e) => {
-                  const entry = stateDistribution.find((s) => s.name === e.value);
-                  if (entry) {
-                    navigate(`/agents?state=${encodeURIComponent(entry.state)}`);
-                  }
+                content={({ payload }) => {
+                  if (!payload) return null;
+                  return (
+                    <ul style={{
+                      display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
+                      listStyle: 'none', padding: 0, margin: '8px 0 0', gap: '8px 16px',
+                    }}>
+                      {payload.map((item, index) => {
+                        const entry = stateDistribution[index];
+                        if (!entry) return null;
+                        const isPull = PULL_STATES.has(entry.state);
+                        const color = STATE_COLORS[entry.state] ?? STATE_COLORS.UNKNOWN;
+                        return (
+                          <li
+                            key={item.value}
+                            style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: 14 }}
+                            onClick={() => navigate(`/agents?state=${encodeURIComponent(entry.state)}`)}
+                          >
+                            {isPull ? (
+                              <svg width={14} height={14} style={{ marginRight: 4, flexShrink: 0 }}>
+                                <defs>
+                                  <pattern
+                                    id={`legend-stripe-${entry.state}`}
+                                    width={4}
+                                    height={4}
+                                    patternUnits="userSpaceOnUse"
+                                    patternTransform="rotate(45)"
+                                  >
+                                    <rect width={2} height={4} fill="white" />
+                                    <rect x={2} width={2} height={4} fill={color} />
+                                  </pattern>
+                                </defs>
+                                <rect
+                                  width={14}
+                                  height={14}
+                                  fill={`url(#legend-stripe-${entry.state})`}
+                                  stroke={color}
+                                  strokeWidth={1}
+                                />
+                              </svg>
+                            ) : (
+                              <span style={{
+                                width: 14, height: 14, backgroundColor: color,
+                                display: 'inline-block', marginRight: 4, borderRadius: 2, flexShrink: 0,
+                              }} />
+                            )}
+                            <span>{item.value}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  );
                 }}
-                formatter={(value) => <span style={{ cursor: 'pointer' }}>{value}</span>}
               />
             </PieChart>
           </ResponsiveContainer>
