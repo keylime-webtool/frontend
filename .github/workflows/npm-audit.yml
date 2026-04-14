@@ -1,0 +1,36 @@
+name: Security audit
+on:
+  push:
+    branches: [main]
+    tags:
+      - "v*"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  security_audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v4
+        id: changes
+        with:
+          filters: |
+            deps:
+              - 'package.json'
+              - 'package-lock.json'
+      - uses: actions/setup-node@v4
+        if: steps.changes.outputs.deps == 'true'
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        if: steps.changes.outputs.deps == 'true'
+        run: npm ci
+      - name: Run npm audit
+        if: steps.changes.outputs.deps == 'true'
+        run: npm audit --omit=dev
+      - name: Skip (no dependency changes)
+        if: steps.changes.outputs.deps != 'true'
+        run: echo "No package.json/package-lock.json changes — skipping security audit"
