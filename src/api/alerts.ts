@@ -2,7 +2,7 @@ import apiClient from './client';
 import type { Alert, AlertSummary, PaginatedResponse } from '@/types';
 
 export const alertsApi = {
-  list(params?: { severity?: string; state?: string; page?: number; per_page?: number }) {
+  list(params?: { severity?: string; state?: string; type?: string; page?: number; per_page?: number }) {
     return apiClient.get<PaginatedResponse<Alert>>('/alerts', { params });
   },
 
