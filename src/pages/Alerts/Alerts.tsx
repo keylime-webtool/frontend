@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { KpiCard } from '@/components/common/KpiCard';
 import { DataTable } from '@/components/common/DataTable';
@@ -7,8 +8,16 @@ import { alertsApi } from '@/api/alerts';
 import type { Alert } from '@/types';
 
 export function Alerts() {
-  const [severityFilter, setSeverityFilter] = useState('');
-  const [stateFilter, setStateFilter] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [severityFilter, setSeverityFilter] = useState(searchParams.get('severity') ?? '');
+  const [stateFilter, setStateFilter] = useState(searchParams.get('state') ?? '');
+  const [typeFilter, setTypeFilter] = useState(searchParams.get('type') ?? '');
+
+  useEffect(() => {
+    setSeverityFilter(searchParams.get('severity') ?? '');
+    setStateFilter(searchParams.get('state') ?? '');
+    setTypeFilter(searchParams.get('type') ?? '');
+  }, [searchParams]);
 
   const { data: summary } = useQuery({
     queryKey: ['alerts', 'summary'],
@@ -17,11 +26,12 @@ export function Alerts() {
   });
 
   const { data: alerts, isLoading } = useQuery({
-    queryKey: ['alerts', severityFilter, stateFilter],
+    queryKey: ['alerts', severityFilter, stateFilter, typeFilter],
     queryFn: () =>
       alertsApi.list({
         severity: severityFilter || undefined,
         state: stateFilter || undefined,
+        type: typeFilter || undefined,
       }),
     select: (res) => res.data,
   });
@@ -107,7 +117,7 @@ export function Alerts() {
           </p>
         </div>
         <button
-          onClick={() => { setSeverityFilter(''); setStateFilter(''); }}
+          onClick={() => { setSeverityFilter(''); setStateFilter(''); setTypeFilter(''); setSearchParams({}); }}
           style={{
             padding: '8px 16px',
             fontSize: '14px',
@@ -174,6 +184,21 @@ export function Alerts() {
           <option value="under_investigation">Investigating</option>
           <option value="resolved">Resolved</option>
           <option value="dismissed">Dismissed</option>
+        </select>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '14px' }}
+          aria-label="Filter by type"
+        >
+          <option value="">All types</option>
+          <option value="attestation_failure">Attestation Failure</option>
+          <option value="cert_expiry">Cert Expiry</option>
+          <option value="policy_violation">Policy Violation</option>
+          <option value="pcr_change">PCR Change</option>
+          <option value="service_down">Service Down</option>
+          <option value="rate_limit">Rate Limit</option>
+          <option value="clock_skew">Clock Skew</option>
         </select>
       </div>
 

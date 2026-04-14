@@ -195,7 +195,7 @@ export function Dashboard() {
                       style={{ cursor: 'pointer' }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate('/alerts');
+                        navigate(`/alerts?${alertChartDimension}=${encodeURIComponent(name)}`);
                       }}
                     >
                       {`${name.replace(/_/g, ' ')} (${value})`}
@@ -204,7 +204,12 @@ export function Dashboard() {
                 }}
                 labelLine
                 style={{ cursor: 'pointer' }}
-                onClick={() => navigate('/alerts')}
+                onClick={(_data, index) => {
+                  const entry = alertChartData[index];
+                  if (entry) {
+                    navigate(`/alerts?${alertChartDimension}=${encodeURIComponent(entry.name)}`);
+                  }
+                }}
               >
                 {alertChartData.map((entry) => (
                   <Cell
