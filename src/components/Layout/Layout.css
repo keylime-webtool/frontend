@@ -178,6 +178,12 @@
   border-color: var(--color-primary);
 }
 
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .topbar__notifications {
   position: relative;
   background: none;
@@ -218,6 +224,22 @@
   align-items: center;
   justify-content: center;
   padding: 0 4px;
+}
+
+.topbar__settings {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 18px;
+  padding: 4px 8px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.topbar__settings:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .topbar__user {
