@@ -83,19 +83,30 @@ export function TopBar({ selectedTimeRange, onTimeRangeChange }: TopBarProps) {
           {alertCount > 0 && <span className="topbar__badge">{alertCount}</span>}
         </button>
 
-        <button
-          className="topbar__theme-toggle"
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
-          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
-        >
-          {theme === 'light' ? '\u263E' : '\u2600'}
-        </button>
+        <div className="topbar__actions">
+          <button
+            className="topbar__theme-toggle"
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+          >
+            {theme === 'light' ? '\u263E' : '\u2600'}
+          </button>
 
-        <button className="topbar__user" aria-label="User menu">
-          <span className="topbar__user-avatar">{initials}</span>
-          {user?.name || 'Guest'}
-        </button>
+          <button
+            className="topbar__settings"
+            aria-label="Settings"
+            onClick={() => navigate('/settings')}
+            title="Settings"
+          >
+            &#x2699;
+          </button>
+
+          <button className="topbar__user" aria-label="User menu">
+            <span className="topbar__user-avatar">{initials}</span>
+            {user?.name || 'Guest'}
+          </button>
+        </div>
       </div>
     </header>
   );
