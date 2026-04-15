@@ -5,6 +5,7 @@ import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { AgentStateChart } from '@/components/common/AgentStateChart';
 import { agentsApi } from '@/api/agents';
+import { useAuth } from '@/hooks/useAuth';
 import type { AgentListParams } from '@/types';
 
 
@@ -22,6 +23,7 @@ interface AgentRow {
 
 export function AgentList() {
   const navigate = useNavigate();
+  const { canWrite } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [stateFilter, setStateFilter] = useState<string>(searchParams.get('state') ?? '');
@@ -232,7 +234,7 @@ export function AgentList() {
             data={items}
             keyField="id"
             onRowClick={(row) => navigate(`/agents/${row.id}`)}
-            selectable
+            selectable={canWrite()}
           />
           {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px' }}>
