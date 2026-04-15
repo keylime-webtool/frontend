@@ -184,15 +184,6 @@
   gap: 4px;
 }
 
-.topbar__notifications {
-  position: relative;
-  background: none;
-  border: none;
-  font-size: 18px;
-  color: var(--color-text-secondary);
-  padding: 4px;
-}
-
 .topbar__theme-toggle {
   background: none;
   border: 1px solid var(--color-border);
@@ -207,23 +198,6 @@
 .topbar__theme-toggle:hover {
   background: var(--color-bg);
   color: var(--color-text);
-}
-
-.topbar__badge {
-  position: absolute;
-  top: -2px;
-  right: -4px;
-  background: var(--color-danger);
-  color: white;
-  font-size: 10px;
-  font-weight: 700;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
 }
 
 .topbar__settings {
