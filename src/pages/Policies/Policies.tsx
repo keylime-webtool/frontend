@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { useAuth } from '@/hooks/useAuth';
 import { policiesApi } from '@/api/policies';
 import type { Policy } from '@/types';
 
@@ -11,6 +12,7 @@ const KIND_LABELS: Record<string, string> = {
 };
 
 export function Policies() {
+  const { canWrite } = useAuth();
   const [search, setSearch] = useState('');
 
   const { data, isLoading } = useQuery({
@@ -70,31 +72,35 @@ export function Policies() {
           }}
           aria-label="Search policies"
         />
-        <button
-          style={{
-            padding: '8px 20px',
-            background: 'var(--color-primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '14px',
-            fontWeight: 500,
-          }}
-        >
-          New Policy
-        </button>
-        <button
-          style={{
-            padding: '8px 20px',
-            background: 'var(--color-surface)',
-            color: 'var(--color-text)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '14px',
-          }}
-        >
-          Import
-        </button>
+        {canWrite() && (
+          <>
+            <button
+              style={{
+                padding: '8px 20px',
+                background: 'var(--color-primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '14px',
+                fontWeight: 500,
+              }}
+            >
+              New Policy
+            </button>
+            <button
+              style={{
+                padding: '8px 20px',
+                background: 'var(--color-surface)',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '14px',
+              }}
+            >
+              Import
+            </button>
+          </>
+        )}
       </div>
 
       {isLoading ? (
