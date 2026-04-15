@@ -84,6 +84,7 @@ export function Alerts() {
                 border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-sm)',
                 background: 'var(--color-surface)',
+                color: 'var(--color-text)',
               }}
             >
               Ack
@@ -97,6 +98,7 @@ export function Alerts() {
                 border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-sm)',
                 background: 'var(--color-surface)',
+                color: 'var(--color-text)',
               }}
             >
               Investigate
@@ -164,7 +166,7 @@ export function Alerts() {
         <select
           value={severityFilter}
           onChange={(e) => setSeverityFilter(e.target.value)}
-          style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '14px' }}
+          style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '14px', color: 'var(--color-text)', background: 'var(--color-surface)' }}
           aria-label="Filter by severity"
         >
           <option value="">All severities</option>
@@ -175,7 +177,7 @@ export function Alerts() {
         <select
           value={stateFilter}
           onChange={(e) => setStateFilter(e.target.value)}
-          style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '14px' }}
+          style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '14px', color: 'var(--color-text)', background: 'var(--color-surface)' }}
           aria-label="Filter by state"
         >
           <option value="">All states</option>
@@ -188,7 +190,7 @@ export function Alerts() {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '14px' }}
+          style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '14px', color: 'var(--color-text)', background: 'var(--color-surface)' }}
           aria-label="Filter by type"
         >
           <option value="">All types</option>

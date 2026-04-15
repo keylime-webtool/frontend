@@ -155,7 +155,7 @@ export function Dashboard() {
                   border: '1px solid var(--color-border)',
                   borderRadius: 'var(--radius-sm)',
                   background: alertChartDimension === dim ? 'var(--color-primary)' : 'var(--color-surface)',
-                  color: alertChartDimension === dim ? '#fff' : 'inherit',
+                  color: alertChartDimension === dim ? '#fff' : 'var(--color-text)',
                   cursor: 'pointer',
                   textTransform: 'capitalize',
                 }}
