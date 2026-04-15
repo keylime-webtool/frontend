@@ -43,6 +43,15 @@ const ALERT_COLOR_MAPS: Record<AlertChartDimension, Record<string, string>> = {
 
 const ALERT_FALLBACK_COLOR = '#bdbdbd';
 
+// Agent states used to derive attestation stats as a fallback
+const FAILED_STATES = new Set([
+  'FAILED', 'INVALID_QUOTE', 'TENANT_FAILED', 'FAIL',
+]);
+const ATTESTED_STATES = new Set([
+  'GET_QUOTE', 'PROVIDE_V', 'REGISTERED', 'PASS',
+  'FAILED', 'INVALID_QUOTE', 'TENANT_FAILED', 'FAIL',
+]);
+
 export function Dashboard() {
   const { timeRange } = useOutletContext<{ timeRange: string }>();
   const navigate = useNavigate();
@@ -78,6 +87,16 @@ export function Dashboard() {
     [agents]
   );
 
+  // Derive attestation stats from agent states when the summary endpoint
+  // returns no data (e.g. backend attestation history not yet available).
+  const agentAttestation = useMemo(() => {
+    const attested = agentItems.filter((a) => ATTESTED_STATES.has((a.state ?? '').toUpperCase()));
+    if (attested.length === 0) return null;
+    const failedCount = attested.filter((a) => FAILED_STATES.has((a.state ?? '').toUpperCase())).length;
+    const successRate = ((attested.length - failedCount) / attested.length) * 100;
+    return { successRate, failedCount };
+  }, [agentItems]);
+
   const alertItems: Alert[] = useMemo(
     () => Array.isArray(alertsData?.items) ? alertsData.items : Array.isArray(alertsData) ? alertsData : [],
     [alertsData]
@@ -112,13 +131,15 @@ export function Dashboard() {
           value={
             attestationSummary?.success_rate != null
               ? `${attestationSummary.success_rate.toFixed(1)}%`
-              : '--'
+              : agentAttestation
+                ? `${agentAttestation.successRate.toFixed(1)}%`
+                : '--'
           }
           variant="success"
         />
         <KpiCard
           title="Failed Attestations"
-          value={attestationSummary?.total_failed ?? '--'}
+          value={attestationSummary?.total_failed ?? agentAttestation?.failedCount ?? '--'}
           variant="danger"
           subtitle={`in last ${timeRange}`}
         />
