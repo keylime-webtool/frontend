@@ -65,6 +65,8 @@ export function Policies() {
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-sm)',
             fontSize: '14px',
+            color: 'var(--color-text)',
+            background: 'var(--color-surface)',
           }}
           aria-label="Search policies"
         />
@@ -85,6 +87,7 @@ export function Policies() {
           style={{
             padding: '8px 20px',
             background: 'var(--color-surface)',
+            color: 'var(--color-text)',
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-sm)',
             fontSize: '14px',

@@ -153,6 +153,8 @@ export function AgentList() {
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-sm)',
             fontSize: '14px',
+            color: 'var(--color-text)',
+            background: 'var(--color-surface)',
           }}
           aria-label="Search agents"
         />
@@ -175,6 +177,8 @@ export function AgentList() {
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-sm)',
             fontSize: '14px',
+            color: 'var(--color-text)',
+            background: 'var(--color-surface)',
           }}
           aria-label="Filter by state"
         >
@@ -214,6 +218,8 @@ export function AgentList() {
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-sm)',
             fontSize: '14px',
+            color: 'var(--color-text)',
+            background: 'var(--color-surface)',
           }}
           aria-label="Filter by mode"
         >
@@ -241,7 +247,7 @@ export function AgentList() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                style={{ padding: '6px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)' }}
+                style={{ padding: '6px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }}
               >
                 Previous
               </button>
@@ -251,7 +257,7 @@ export function AgentList() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                style={{ padding: '6px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)' }}
+                style={{ padding: '6px 16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }}
               >
                 Next
               </button>

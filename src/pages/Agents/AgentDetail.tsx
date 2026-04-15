@@ -309,6 +309,7 @@ function RawTab({ agentId }: { agentId: string }) {
       <pre
         style={{
           background: 'var(--color-bg)',
+          color: 'var(--color-text)',
           padding: '16px',
           borderRadius: 'var(--radius-sm)',
           overflow: 'auto',

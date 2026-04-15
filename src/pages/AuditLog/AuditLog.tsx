@@ -72,7 +72,7 @@ export function AuditLog() {
         <select
           value={severity}
           onChange={(e) => setSeverity(e.target.value)}
-          style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '14px' }}
+          style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '14px', color: 'var(--color-text)', background: 'var(--color-surface)' }}
           aria-label="Filter by severity"
         >
           <option value="">All severities</option>
@@ -87,6 +87,7 @@ export function AuditLog() {
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-sm)',
             background: 'var(--color-surface)',
+            color: 'var(--color-text)',
             fontSize: '14px',
           }}
         >
@@ -98,6 +99,7 @@ export function AuditLog() {
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-sm)',
             background: 'var(--color-surface)',
+            color: 'var(--color-text)',
             fontSize: '14px',
           }}
         >
