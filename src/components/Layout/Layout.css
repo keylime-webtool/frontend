@@ -131,6 +131,7 @@
   border-radius: var(--radius-md);
   font-size: 14px;
   background: var(--color-bg);
+  color: var(--color-text);
   outline: none;
   transition: border-color 0.15s;
 }
