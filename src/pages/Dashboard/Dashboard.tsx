@@ -238,7 +238,7 @@ export function Dashboard() {
                         navigate(`/alerts?${alertChartDimension}=${encodeURIComponent(name)}`);
                       }}
                     >
-                      {`${name.replace(/_/g, ' ')} (${value})`}
+                      {`${name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} (${value})`}
                     </text>
                   );
                 }}
