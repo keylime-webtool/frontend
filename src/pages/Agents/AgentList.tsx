@@ -28,6 +28,7 @@ export function AgentList() {
   const [page, setPage] = useState(1);
   const [stateFilter, setStateFilter] = useState<string>(searchParams.get('state') ?? '');
   const [modeFilter, setModeFilter] = useState<string>(searchParams.get('mode') ?? '');
+  const [policyFilter, setPolicyFilter] = useState<string>(searchParams.get('policy') ?? '');
   const [search, setSearch] = useState(searchParams.get('q') ?? '');
 
   // Sync search and state filter when URL query params change
@@ -35,9 +36,11 @@ export function AgentList() {
     const q = searchParams.get('q') ?? '';
     const state = searchParams.get('state') ?? '';
     const mode = searchParams.get('mode') ?? '';
+    const policy = searchParams.get('policy') ?? '';
     setSearch(q);
     setStateFilter(state);
     setModeFilter(mode);
+    setPolicyFilter(policy);
     setPage(1);
   }, [searchParams]);
 
@@ -62,9 +65,9 @@ export function AgentList() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rawItems = (data as any)?.items ?? data;
   const allItems: AgentRow[] = Array.isArray(rawItems) ? rawItems : [];
-  const items = modeFilter
-    ? allItems.filter((a) => a.attestation_mode === modeFilter)
-    : allItems;
+  let items = allItems;
+  if (modeFilter) items = items.filter((a) => a.attestation_mode === modeFilter);
+  if (policyFilter) items = items.filter((a) => a.assigned_policy === policyFilter || a.mb_policy === policyFilter);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const totalPages = (data as any)?.total_pages ?? 1;
 
@@ -115,6 +118,7 @@ export function AgentList() {
             setSearch('');
             setStateFilter('');
             setModeFilter('');
+            setPolicyFilter('');
             setPage(1);
             setSearchParams({});
           }}
