@@ -15,13 +15,13 @@ interface AgentDetail {
   [key: string]: unknown;
 }
 
-const TABS = ['Timeline', 'PCR Values', 'IMA Log', 'Boot Log', 'Certificates', 'Raw Data'] as const;
+const TABS = ['PCR Values', 'IMA Log', 'Boot Log', 'Certificates', 'Timeline', 'Raw Data'] as const;
 type Tab = (typeof TABS)[number];
 
 export function AgentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('Timeline');
+  const [activeTab, setActiveTab] = useState<Tab>('PCR Values');
 
   const { data: agent, isLoading } = useQuery({
     queryKey: ['agent', id],
@@ -113,6 +113,19 @@ function TabContent({ tab, agentId }: { tab: Tab; agentId: string }) {
   }
 }
 
+interface TimelineEvent {
+  timestamp: string;
+  event: string;
+  detail: string;
+}
+
+const EVENT_VARIANTS: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+  attestation_success: 'success',
+  attestation_failed: 'danger',
+  registered: 'info',
+  first_attestation: 'info',
+};
+
 function TimelineTab({ agentId }: { agentId: string }) {
   const { data } = useQuery({
     queryKey: ['agent', agentId, 'timeline'],
@@ -120,20 +133,46 @@ function TimelineTab({ agentId }: { agentId: string }) {
     select: (res) => res.data,
   });
 
+  const events: TimelineEvent[] = Array.isArray(data) ? data as unknown as TimelineEvent[] : [];
+
   return (
     <div>
       <h3 className="section__title">Attestation Timeline</h3>
-      {data ? (
-        <div className="placeholder">
-          <div className="placeholder__icon">&#x1F4C8;</div>
-          <div className="placeholder__text">Timeline chart ({data.length} data points)</div>
-          <div className="placeholder__subtext">
-            Zoomable attestation history with pass/fail coloring.
-          </div>
+      {events.length > 0 ? (
+        <div className="data-table__wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th className="data-table__th">Timestamp</th>
+                <th className="data-table__th">Event</th>
+                <th className="data-table__th">Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((ev, i) => (
+                <tr key={i} className="data-table__row">
+                  <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                    {new Date(ev.timestamp).toLocaleString()}
+                  </td>
+                  <td className="data-table__td">
+                    <StatusBadge
+                      label={ev.event.replace(/_/g, ' ')}
+                      variant={EVENT_VARIANTS[ev.event]}
+                    />
+                  </td>
+                  <td className="data-table__td">{ev.detail}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="placeholder">
-          <div className="placeholder__text">Loading timeline...</div>
+          <div className="placeholder__icon">&#x1F4C8;</div>
+          <div className="placeholder__text">No attestation timeline data</div>
+          <div className="placeholder__subtext">
+            Attestation history will appear here once events are recorded for this agent.
+          </div>
         </div>
       )}
     </div>
