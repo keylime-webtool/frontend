@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { performanceApi } from '@/api/performance';
+import { settingsApi } from '@/api/settings';
 import type { IntegrationService } from '@/types';
 
 export function Integrations() {
@@ -8,13 +10,75 @@ export function Integrations() {
     queryKey: ['integrations', 'status'],
     queryFn: () => performanceApi.integrations(),
     select: (res) => res.data,
+    refetchInterval: 1000,
   });
+
+  // Backend health: try fetching the settings endpoint (lightweight).
+  // If it responds, backend is up; if it throws, it's down.
+  const { data: backendResult, isLoading: backendLoading } = useQuery({
+    queryKey: ['integrations', 'backend-health'],
+    queryFn: async () => {
+      const start = performance.now();
+      try {
+        await settingsApi.getKeylime();
+        return { status: 'up' as const, latency_ms: Math.round(performance.now() - start) };
+      } catch {
+        return { status: 'down' as const, latency_ms: Math.round(performance.now() - start) };
+      }
+    },
+    refetchInterval: 1000,
+  });
+
+  const backendService: IntegrationService | null = useMemo(() => {
+    if (!backendResult) return null;
+    return {
+      name: 'keylime-webtool-backend',
+      address: import.meta.env.VITE_API_BASE_URL || window.location.origin,
+      status: backendResult.status,
+      latency_ms: backendResult.latency_ms,
+    };
+  }, [backendResult]);
 
   return (
     <div>
       <div className="page-header">
         <h1 className="page-header__title">Integrations</h1>
         <p className="page-header__subtitle">Backend service connectivity and health monitoring</p>
+      </div>
+
+      <div className="section">
+        <h2 className="section__title">Webtool Backend</h2>
+        {backendLoading ? (
+          <div className="placeholder">
+            <div className="placeholder__text">Checking backend...</div>
+          </div>
+        ) : backendService ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+            <div
+              style={{
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                padding: '16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '14px' }}>{backendService.name}</div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                  {backendService.address}
+                </div>
+                {backendService.latency_ms !== undefined && (
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                    Latency: {backendService.latency_ms}ms
+                  </div>
+                )}
+              </div>
+              <StatusBadge label={backendService.status} />
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="section">
