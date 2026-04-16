@@ -26,7 +26,7 @@ export type ServiceStatus = 'up' | 'down' | 'high_load' | 'timeout' | 'not_confi
 
 export interface IntegrationService {
   name: string;
-  address: string;
+  endpoint: string;
   status: ServiceStatus;
   uptime?: string;
   latency_ms?: number;
