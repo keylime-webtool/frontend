@@ -7,9 +7,10 @@ import { useVisualizationStore } from '@/store/visualizationStore';
 interface TopBarProps {
   selectedTimeRange: string;
   onTimeRangeChange: (value: string) => void;
+  onToggleSidebar: () => void;
 }
 
-export function TopBar({ selectedTimeRange, onTimeRangeChange }: TopBarProps) {
+export function TopBar({ selectedTimeRange, onTimeRangeChange, onToggleSidebar }: TopBarProps) {
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -35,6 +36,14 @@ export function TopBar({ selectedTimeRange, onTimeRangeChange }: TopBarProps) {
   return (
     <header className="layout__topbar">
       <div className="topbar">
+        <button
+          className="topbar__hamburger"
+          onClick={onToggleSidebar}
+          aria-label="Toggle sidebar"
+          title="Toggle sidebar"
+        >
+          &#x2630;
+        </button>
         <form className="topbar__search" onSubmit={handleSearch}>
           <span className="topbar__search-icon" aria-hidden="true">
             &#x1F50D;
