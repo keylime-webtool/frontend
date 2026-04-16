@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useVisualizationStore } from '@/store/visualizationStore';
 import { settingsApi } from '@/api/settings';
 import { getBackendUrl, setBackendUrl } from '@/api/client';
-import type { KeylimeSettings } from '@/api/settings';
+import type { KeylimeSettings, CertificateSettings } from '@/api/settings';
 import { TIME_RANGES } from '@/types';
 
 const COMPLIANCE_FRAMEWORKS = [
@@ -58,6 +58,12 @@ export function Settings() {
     select: (res) => res.data as unknown as KeylimeSettings,
   });
 
+  const { data: certSettings } = useQuery({
+    queryKey: ['settings', 'certificates'],
+    queryFn: () => settingsApi.getCertificates(),
+    select: (res) => res.data as unknown as CertificateSettings,
+  });
+
   const [verifierUrl, setVerifierUrl] = useState('');
   const [registrarUrl, setRegistrarUrl] = useState('');
   const [formLoaded, setFormLoaded] = useState(false);
@@ -67,6 +73,35 @@ export function Settings() {
     setVerifierUrl(keylimeSettings.verifier_url);
     setRegistrarUrl(keylimeSettings.registrar_url);
     setFormLoaded(true);
+  }
+
+  const [certPath, setCertPath] = useState('');
+  const [keyPath, setKeyPath] = useState('');
+  const [caCertPath, setCaCertPath] = useState('');
+  const [certFormLoaded, setCertFormLoaded] = useState(false);
+  const [certMode, setCertMode] = useState<'directory' | 'manual'>('directory');
+  const [certDir, setCertDir] = useState('/var/lib/keylime/cv_ca');
+
+  if (certSettings && !certFormLoaded) {
+    setCertPath(certSettings.cert_path ?? '');
+    setKeyPath(certSettings.key_path ?? '');
+    setCaCertPath(certSettings.ca_cert_path ?? '');
+    // Auto-detect mode: if all three paths share a common directory with standard names, use directory mode
+    const ca = certSettings.ca_cert_path ?? '';
+    const cert = certSettings.cert_path ?? '';
+    const key = certSettings.key_path ?? '';
+    if (ca && cert && key) {
+      const caDir = ca.replace(/\/cacert\.crt$/, '');
+      const certDirGuess = cert.replace(/\/client-cert\.crt$/, '');
+      const keyDirGuess = key.replace(/\/client-private\.pem$/, '');
+      if (caDir === certDirGuess && caDir === keyDirGuess && caDir !== ca) {
+        setCertDir(caDir);
+        setCertMode('directory');
+      } else {
+        setCertMode('manual');
+      }
+    }
+    setCertFormLoaded(true);
   }
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -93,6 +128,70 @@ export function Settings() {
     });
   };
 
+  const [certSaveStatus, setCertSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [certErrorMsg, setCertErrorMsg] = useState('');
+
+  const certMutation = useMutation({
+    mutationFn: (settings: CertificateSettings) => settingsApi.updateCertificates(settings),
+    onMutate: () => { setCertSaveStatus('saving'); setCertErrorMsg(''); },
+    onSuccess: () => {
+      setCertSaveStatus('saved');
+      setCertFormLoaded(false); // reload saved values
+      queryClient.invalidateQueries({ queryKey: ['settings', 'certificates'] });
+      queryClient.invalidateQueries({ queryKey: ['integrations'] });
+      setTimeout(() => setCertSaveStatus('idle'), 3000);
+    },
+    onError: (err: unknown) => {
+      setCertSaveStatus('error');
+      const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
+      setCertErrorMsg(
+        axiosErr?.response?.data?.error
+        || axiosErr?.response?.data?.message
+        || 'Failed to apply certificate settings',
+      );
+      setTimeout(() => setCertSaveStatus('idle'), 5000);
+    },
+  });
+
+  // Determine whether current form values differ from saved settings
+  const savedCa = certSettings?.ca_cert_path ?? null;
+  const savedCert = certSettings?.cert_path ?? null;
+  const savedKey = certSettings?.key_path ?? null;
+
+  const certHasChanges = (() => {
+    if (certMode === 'directory') {
+      const dir = certDir.trim().replace(/\/+$/, '');
+      if (!dir) return savedCa !== null || savedCert !== null || savedKey !== null;
+      return `${dir}/cacert.crt` !== savedCa
+        || `${dir}/client-cert.crt` !== savedCert
+        || `${dir}/client-private.pem` !== savedKey;
+    }
+    return (certPath.trim() || null) !== savedCert
+      || (keyPath.trim() || null) !== savedKey
+      || (caCertPath.trim() || null) !== savedCa;
+  })();
+
+  const handleSaveCertificates = () => {
+    if (certMode === 'directory') {
+      const dir = certDir.trim().replace(/\/+$/, '');
+      if (!dir) {
+        certMutation.mutate({ cert_path: null, key_path: null, ca_cert_path: null });
+      } else {
+        certMutation.mutate({
+          ca_cert_path: `${dir}/cacert.crt`,
+          cert_path: `${dir}/client-cert.crt`,
+          key_path: `${dir}/client-private.pem`,
+        });
+      }
+    } else {
+      certMutation.mutate({
+        cert_path: certPath.trim() || null,
+        key_path: keyPath.trim() || null,
+        ca_cert_path: caCertPath.trim() || null,
+      });
+    }
+  };
+
   const [backendUrlInitial] = useState(() => getBackendUrl());
   const [backendUrlField, setBackendUrlField] = useState(backendUrlInitial);
 
@@ -104,6 +203,7 @@ export function Settings() {
 
   const sections = [
     { key: 'keylime', label: 'Keylime Connection' },
+    { key: 'certificates', label: 'Keylime Certificates' },
     { key: 'visualization', label: 'Visualization' },
     { key: 'compliance', label: 'Compliance Reports' },
     { key: 'alerts', label: 'Alert Thresholds' },
@@ -215,6 +315,19 @@ export function Settings() {
                     </button>
                   </div>
                 </div>
+                {verifierUrl.trim().startsWith('http://') && (
+                  <div style={{
+                    padding: '8px 12px',
+                    marginTop: '-8px',
+                    marginBottom: '4px',
+                    fontSize: '12px',
+                    color: 'var(--color-warning, #e8a317)',
+                    background: 'var(--color-warning-bg, rgba(232,163,23,0.08))',
+                    borderRadius: 'var(--radius-sm)',
+                  }}>
+                    Note: The Keylime Verifier typically requires HTTPS. HTTP may only work with mock/development instances.
+                  </div>
+                )}
 
                 <div style={{ ...settingRowStyle, borderBottom: 'none' }}>
                   <div style={{ flex: 1 }}>
@@ -247,6 +360,167 @@ export function Settings() {
                       Apply
                     </button>
                   </div>
+                </div>
+                {registrarUrl.trim().startsWith('http://') && (
+                  <div style={{
+                    padding: '8px 12px',
+                    marginTop: '-8px',
+                    marginBottom: '4px',
+                    fontSize: '12px',
+                    color: 'var(--color-warning, #e8a317)',
+                    background: 'var(--color-warning-bg, rgba(232,163,23,0.08))',
+                    borderRadius: 'var(--radius-sm)',
+                  }}>
+                    Note: The Keylime Registrar typically requires HTTPS. HTTP may only work with mock/development instances.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'certificates' && (
+            <div className="section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 className="section__title" style={{ margin: 0 }}>Keylime Certificates</h2>
+                <div style={{
+                  display: 'inline-flex',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden',
+                }}>
+                  <button
+                    onClick={() => setCertMode('directory')}
+                    style={{
+                      padding: '5px 14px',
+                      fontSize: '12px',
+                      fontWeight: certMode === 'directory' ? 600 : 400,
+                      border: 'none',
+                      background: certMode === 'directory' ? 'var(--color-primary)' : 'var(--color-surface)',
+                      color: certMode === 'directory' ? 'white' : 'var(--color-text-secondary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    By directory
+                  </button>
+                  <button
+                    onClick={() => setCertMode('manual')}
+                    style={{
+                      padding: '5px 14px',
+                      fontSize: '12px',
+                      fontWeight: certMode === 'manual' ? 600 : 400,
+                      border: 'none',
+                      borderLeft: '1px solid var(--color-border)',
+                      background: certMode === 'manual' ? 'var(--color-primary)' : 'var(--color-surface)',
+                      color: certMode === 'manual' ? 'white' : 'var(--color-text-secondary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Manually
+                  </button>
+                </div>
+              </div>
+              <div>
+                {certMode === 'directory' ? (
+                  <div style={settingRowStyle}>
+                    <div style={{ flex: 1 }}>
+                      <div style={settingLabelStyle}>Certificate directory</div>
+                      <div style={settingDescStyle}>
+                        <strong>Backend directory</strong> containing cacert.crt, client-cert.crt, and client-private.pem
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      value={certDir}
+                      onChange={(e) => setCertDir(e.target.value)}
+                      placeholder="/var/lib/keylime/cv_ca"
+                      style={{ ...selectStyle, width: '320px' }}
+                      aria-label="Certificate directory"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div style={settingRowStyle}>
+                      <div style={{ flex: 1 }}>
+                        <div style={settingLabelStyle}>CA Certificate</div>
+                        <div style={settingDescStyle}>Path to the CA certificate file on the backend server</div>
+                      </div>
+                      <input
+                        type="text"
+                        value={caCertPath}
+                        onChange={(e) => setCaCertPath(e.target.value)}
+                        placeholder="/var/lib/keylime/cv_ca/cacert.crt"
+                        style={{ ...selectStyle, width: '320px' }}
+                        aria-label="CA certificate path"
+                      />
+                    </div>
+
+                    <div style={settingRowStyle}>
+                      <div style={{ flex: 1 }}>
+                        <div style={settingLabelStyle}>Client Certificate</div>
+                        <div style={settingDescStyle}>Path to the client certificate file on the backend server</div>
+                      </div>
+                      <input
+                        type="text"
+                        value={certPath}
+                        onChange={(e) => setCertPath(e.target.value)}
+                        placeholder="/var/lib/keylime/cv_ca/client-cert.crt"
+                        style={{ ...selectStyle, width: '320px' }}
+                        aria-label="Client certificate path"
+                      />
+                    </div>
+
+                    <div style={settingRowStyle}>
+                      <div style={{ flex: 1 }}>
+                        <div style={settingLabelStyle}>Client Key</div>
+                        <div style={settingDescStyle}>Path to the client private key file on the backend server</div>
+                      </div>
+                      <input
+                        type="text"
+                        value={keyPath}
+                        onChange={(e) => setKeyPath(e.target.value)}
+                        placeholder="/var/lib/keylime/cv_ca/client-private.pem"
+                        style={{ ...selectStyle, width: '320px' }}
+                        aria-label="Client key path"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {certSaveStatus === 'error' && certErrorMsg && (
+                  <div style={{
+                    padding: '8px 12px',
+                    fontSize: '12px',
+                    color: 'var(--color-danger, #ea4335)',
+                    background: 'var(--color-danger-bg, rgba(234,67,53,0.08))',
+                    borderRadius: 'var(--radius-sm)',
+                    marginTop: '4px',
+                  }}>
+                    {certErrorMsg}
+                  </div>
+                )}
+
+                <div style={{ ...settingRowStyle, borderBottom: 'none', justifyContent: 'flex-end', gap: '12px' }}>
+                  {certSaveStatus === 'saved' && (
+                    <span style={{ color: 'var(--color-success, #34a853)', fontSize: '14px' }}>
+                      Certificates configured
+                    </span>
+                  )}
+                  <button
+                    onClick={handleSaveCertificates}
+                    disabled={!certHasChanges || certSaveStatus === 'saving'}
+                    style={{
+                      padding: '8px 24px',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      border: 'none',
+                      borderRadius: 'var(--radius-sm)',
+                      background: certHasChanges ? 'var(--color-primary)' : 'var(--color-border)',
+                      color: certHasChanges ? 'white' : 'var(--color-text-secondary)',
+                      cursor: certHasChanges && certSaveStatus !== 'saving' ? 'pointer' : 'default',
+                    }}
+                  >
+                    {certSaveStatus === 'saving' ? 'Applying...' : 'Apply'}
+                  </button>
                 </div>
               </div>
             </div>
