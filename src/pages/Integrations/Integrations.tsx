@@ -3,16 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { performanceApi } from '@/api/performance';
 import { settingsApi } from '@/api/settings';
+import { getBackendUrl } from '@/api/client';
 import type { IntegrationService } from '@/types';
 
 export function Integrations() {
-  const { data: services, isLoading } = useQuery({
-    queryKey: ['integrations', 'status'],
-    queryFn: () => performanceApi.integrations(),
-    select: (res) => res.data,
-    refetchInterval: 1000,
-  });
-
   // Backend health: try fetching the settings endpoint (lightweight).
   // If it responds, backend is up; if it throws, it's down.
   const { data: backendResult, isLoading: backendLoading } = useQuery({
@@ -29,11 +23,21 @@ export function Integrations() {
     refetchInterval: 1000,
   });
 
+  const backendUp = backendResult?.status === 'up';
+
+  const { data: services, isLoading } = useQuery({
+    queryKey: ['integrations', 'status'],
+    queryFn: () => performanceApi.integrations(),
+    select: (res) => res.data,
+    refetchInterval: 1000,
+    enabled: backendUp,
+  });
+
   const backendService: IntegrationService | null = useMemo(() => {
     if (!backendResult) return null;
     return {
       name: 'keylime-webtool-backend',
-      address: import.meta.env.VITE_API_BASE_URL || window.location.origin,
+      address: getBackendUrl(),
       status: backendResult.status,
       latency_ms: backendResult.latency_ms,
     };
@@ -81,9 +85,16 @@ export function Integrations() {
         ) : null}
       </div>
 
-      <div className="section">
+      <div className="section" style={{ opacity: backendUp ? 1 : 0.5 }}>
         <h2 className="section__title">Core Services</h2>
-        {isLoading ? (
+        {!backendUp ? (
+          <div className="placeholder">
+            <div className="placeholder__text">Backend unavailable</div>
+            <div className="placeholder__subtext">
+              Core service status requires a connection to the webtool backend.
+            </div>
+          </div>
+        ) : isLoading ? (
           <div className="placeholder">
             <div className="placeholder__text">Loading service status...</div>
           </div>
@@ -128,12 +139,12 @@ export function Integrations() {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', opacity: backendUp ? 1 : 0.5 }}>
         <div className="section">
           <h2 className="section__title">Attestation Backends</h2>
           <div className="placeholder">
             <div className="placeholder__icon">&#x1F4E6;</div>
-            <div className="placeholder__text">Durable backends</div>
+            <div className="placeholder__text">{backendUp ? 'Durable backends' : 'Backend unavailable'}</div>
             <div className="placeholder__subtext">
               Rekor, Redis, and RFC 3161 TSA status with connection state and latency.
             </div>
@@ -144,7 +155,7 @@ export function Integrations() {
           <h2 className="section__title">Notification Channels</h2>
           <div className="placeholder">
             <div className="placeholder__icon">&#x1F514;</div>
-            <div className="placeholder__text">Notification delivery</div>
+            <div className="placeholder__text">{backendUp ? 'Notification delivery' : 'Backend unavailable'}</div>
             <div className="placeholder__subtext">
               ZeroMQ, Webhook, and Agent notification channel status.
             </div>
