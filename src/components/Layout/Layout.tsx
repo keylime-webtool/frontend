@@ -11,6 +11,7 @@ const DEFAULT_SIDEBAR = 240;
 export function Layout() {
   const [timeRange, setTimeRange] = useState('24h');
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const dragging = useRef(false);
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
@@ -40,14 +41,18 @@ export function Layout() {
     };
   }, []);
 
-  const style = { '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties;
+  const style = { '--sidebar-width': `${sidebarCollapsed ? 0 : sidebarWidth}px` } as React.CSSProperties;
 
   return (
-    <div className="layout" style={style}>
+    <div className={`layout${sidebarCollapsed ? ' layout--sidebar-collapsed' : ''}`} style={style}>
       <Sidebar />
-      <div className="layout__resize-handle" onMouseDown={onMouseDown} />
+      {!sidebarCollapsed && <div className="layout__resize-handle" onMouseDown={onMouseDown} />}
       <div className="layout__main">
-        <TopBar selectedTimeRange={timeRange} onTimeRangeChange={setTimeRange} />
+        <TopBar
+          selectedTimeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+          onToggleSidebar={() => setSidebarCollapsed((c) => !c)}
+        />
         <main className="layout__content">
           <Outlet context={{ timeRange }} />
         </main>
