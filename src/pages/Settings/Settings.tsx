@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useVisualizationStore } from '@/store/visualizationStore';
+import { settingsApi } from '@/api/settings';
+import type { KeylimeSettings } from '@/api/settings';
 import { TIME_RANGES } from '@/types';
 
 const COMPLIANCE_FRAMEWORKS = [
@@ -44,10 +47,58 @@ const selectStyle: React.CSSProperties = {
 
 export function Settings() {
   const { user, isAdmin } = useAuth();
-  const [activeSection, setActiveSection] = useState('visualization');
+  const [activeSection, setActiveSection] = useState('keylime');
   const viz = useVisualizationStore();
+  const queryClient = useQueryClient();
+
+  const { data: keylimeSettings } = useQuery({
+    queryKey: ['settings', 'keylime'],
+    queryFn: () => settingsApi.getKeylime(),
+    select: (res) => res.data as unknown as KeylimeSettings,
+  });
+
+  const [verifierUrl, setVerifierUrl] = useState('');
+  const [registrarUrl, setRegistrarUrl] = useState('');
+  const [formLoaded, setFormLoaded] = useState(false);
+
+  // Populate form fields once settings are loaded
+  if (keylimeSettings && !formLoaded) {
+    setVerifierUrl(keylimeSettings.verifier_url);
+    setRegistrarUrl(keylimeSettings.registrar_url);
+    setFormLoaded(true);
+  }
+
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  const updateMutation = useMutation({
+    mutationFn: (settings: KeylimeSettings) => settingsApi.updateKeylime(settings),
+    onMutate: () => setSaveStatus('saving'),
+    onSuccess: () => {
+      setSaveStatus('saved');
+      queryClient.invalidateQueries({ queryKey: ['settings', 'keylime'] });
+      queryClient.invalidateQueries({ queryKey: ['integrations'] });
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    },
+    onError: () => {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    },
+  });
+
+  const handleSaveKeylime = () => {
+    updateMutation.mutate({
+      verifier_url: verifierUrl.trim(),
+      registrar_url: registrarUrl.trim(),
+    });
+  };
+
+  const keylimeChanged =
+    formLoaded &&
+    (verifierUrl !== keylimeSettings?.verifier_url ||
+      registrarUrl !== keylimeSettings?.registrar_url);
 
   const sections = [
+    { key: 'keylime', label: 'Keylime Connection' },
     { key: 'visualization', label: 'Visualization' },
     { key: 'compliance', label: 'Compliance Reports' },
     { key: 'alerts', label: 'Alert Thresholds' },
@@ -90,6 +141,72 @@ export function Settings() {
         </div>
 
         <div style={{ flex: 1 }}>
+          {activeSection === 'keylime' && (
+            <div className="section">
+              <h2 className="section__title">Keylime Connection</h2>
+              <div>
+                <div style={settingRowStyle}>
+                  <div style={{ flex: 1 }}>
+                    <div style={settingLabelStyle}>Verifier URL</div>
+                    <div style={settingDescStyle}>Base URL of the Keylime Verifier API</div>
+                  </div>
+                  <input
+                    type="text"
+                    value={verifierUrl}
+                    onChange={(e) => setVerifierUrl(e.target.value)}
+                    placeholder="http://localhost:8881"
+                    style={{ ...selectStyle, width: '320px' }}
+                    aria-label="Verifier URL"
+                  />
+                </div>
+
+                <div style={settingRowStyle}>
+                  <div style={{ flex: 1 }}>
+                    <div style={settingLabelStyle}>Registrar URL</div>
+                    <div style={settingDescStyle}>Base URL of the Keylime Registrar API</div>
+                  </div>
+                  <input
+                    type="text"
+                    value={registrarUrl}
+                    onChange={(e) => setRegistrarUrl(e.target.value)}
+                    placeholder="http://localhost:8890"
+                    style={{ ...selectStyle, width: '320px' }}
+                    aria-label="Registrar URL"
+                  />
+                </div>
+
+                <div style={{ ...settingRowStyle, borderBottom: 'none', justifyContent: 'flex-end', gap: '12px' }}>
+                  {saveStatus === 'saved' && (
+                    <span style={{ color: 'var(--color-success, #34a853)', fontSize: '14px' }}>
+                      Settings saved
+                    </span>
+                  )}
+                  {saveStatus === 'error' && (
+                    <span style={{ color: 'var(--color-danger, #ea4335)', fontSize: '14px' }}>
+                      Failed to save
+                    </span>
+                  )}
+                  <button
+                    onClick={handleSaveKeylime}
+                    disabled={!keylimeChanged || saveStatus === 'saving'}
+                    style={{
+                      padding: '8px 24px',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      border: 'none',
+                      borderRadius: 'var(--radius-sm)',
+                      background: keylimeChanged ? 'var(--color-primary)' : 'var(--color-border)',
+                      color: keylimeChanged ? 'white' : 'var(--color-text-secondary)',
+                      cursor: keylimeChanged ? 'pointer' : 'default',
+                    }}
+                  >
+                    {saveStatus === 'saving' ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeSection === 'visualization' && (
             <div className="section">
               <h2 className="section__title">Visualization Settings</h2>
