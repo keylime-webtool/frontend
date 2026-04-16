@@ -37,7 +37,7 @@ export function Integrations() {
     if (!backendResult) return null;
     return {
       name: 'keylime-webtool-backend',
-      address: getBackendUrl(),
+      endpoint: getBackendUrl(),
       status: backendResult.status,
       latency_ms: backendResult.latency_ms,
     };
@@ -71,7 +71,7 @@ export function Integrations() {
               <div>
                 <div style={{ fontWeight: 600, fontSize: '14px' }}>{backendService.name}</div>
                 <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                  {backendService.address}
+                  {backendService.endpoint}
                 </div>
                 {backendService.latency_ms !== undefined && (
                   <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
@@ -115,7 +115,7 @@ export function Integrations() {
                 <div>
                   <div style={{ fontWeight: 600, fontSize: '14px' }}>{svc.name}</div>
                   <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                    {svc.address}
+                    {svc.endpoint}
                   </div>
                   {svc.latency_ms !== undefined && (
                     <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
