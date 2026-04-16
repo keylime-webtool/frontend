@@ -1,12 +1,51 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const BACKEND_URL_KEY = 'backend-url';
+const DEFAULT_BACKEND_URL = 'http://localhost:8080';
+
+/**
+ * Returns the base URL used for API requests.
+ * - In dev mode (Vite dev server), always returns '' so requests go through the
+ *   Vite proxy (same-origin /api/*) and avoid CORS issues.
+ * - In production, uses a user-configured URL from localStorage, VITE_API_BASE_URL,
+ *   or '' (for reverse-proxy setups where backend is on the same origin).
+ */
+function getBaseURL(): string {
+  if (import.meta.env.DEV) return '';
+  const saved = localStorage.getItem(BACKEND_URL_KEY);
+  if (saved) return saved.replace(/\/+$/, '');
+  return import.meta.env.VITE_API_BASE_URL || '';
+}
+
+/**
+ * Returns the backend URL for display purposes (Settings, Integrations).
+ * Always resolves to a human-readable URL even when getBaseURL() is empty.
+ */
+export function getBackendUrl(): string {
+  const saved = localStorage.getItem(BACKEND_URL_KEY);
+  if (saved) return saved.replace(/\/+$/, '');
+  return import.meta.env.VITE_API_BASE_URL || DEFAULT_BACKEND_URL;
+}
+
+export function setBackendUrl(url: string): void {
+  const trimmed = url.trim().replace(/\/+$/, '');
+  if (trimmed) {
+    localStorage.setItem(BACKEND_URL_KEY, trimmed);
+  } else {
+    localStorage.removeItem(BACKEND_URL_KEY);
+  }
+}
 
 const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Set baseURL dynamically on every request so changes take effect immediately.
+apiClient.interceptors.request.use((config) => {
+  config.baseURL = `${getBaseURL()}/api`;
+  return config;
 });
 
 apiClient.interceptors.request.use((config) => {
