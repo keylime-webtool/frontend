@@ -64,6 +64,29 @@ export function Settings() {
     select: (res) => res.data as unknown as CertificateSettings,
   });
 
+  // Environment mode defaults
+  const ENV_DEFAULTS = {
+    mock: { backend: 'http://localhost:8080', verifier: 'http://localhost:3000', registrar: 'http://localhost:3001' },
+    production: { backend: 'http://localhost:8080', verifier: 'https://localhost:8881', registrar: 'https://localhost:8891' },
+  } as const;
+
+  type EnvMode = 'mock' | 'production';
+
+  const detectEnvMode = (backend: string, verifier: string, registrar: string): EnvMode => {
+    if (
+      backend === ENV_DEFAULTS.mock.backend &&
+      verifier === ENV_DEFAULTS.mock.verifier &&
+      registrar === ENV_DEFAULTS.mock.registrar
+    ) return 'mock';
+    return 'production';
+  };
+
+  const [envMode, setEnvMode] = useState<EnvMode>('production');
+  const [envModeDetected, setEnvModeDetected] = useState(false);
+
+  const [backendUrlInitial] = useState(() => getBackendUrl());
+  const [backendUrlField, setBackendUrlField] = useState(backendUrlInitial);
+
   const [verifierUrl, setVerifierUrl] = useState('');
   const [registrarUrl, setRegistrarUrl] = useState('');
   const [formLoaded, setFormLoaded] = useState(false);
@@ -74,6 +97,20 @@ export function Settings() {
     setRegistrarUrl(keylimeSettings.registrar_url);
     setFormLoaded(true);
   }
+
+  // Auto-detect environment mode once all three URLs are available
+  if (formLoaded && !envModeDetected) {
+    setEnvMode(detectEnvMode(backendUrlField, verifierUrl, registrarUrl));
+    setEnvModeDetected(true);
+  }
+
+  const handleEnvModeSwitch = (mode: EnvMode) => {
+    setEnvMode(mode);
+    const defaults = ENV_DEFAULTS[mode];
+    setBackendUrlField(defaults.backend);
+    setVerifierUrl(defaults.verifier);
+    setRegistrarUrl(defaults.registrar);
+  };
 
   const [certPath, setCertPath] = useState('');
   const [keyPath, setKeyPath] = useState('');
@@ -192,9 +229,6 @@ export function Settings() {
     }
   };
 
-  const [backendUrlInitial] = useState(() => getBackendUrl());
-  const [backendUrlField, setBackendUrlField] = useState(backendUrlInitial);
-
   const handleSaveBackendUrl = () => {
     setBackendUrl(backendUrlField);
     queryClient.invalidateQueries();
@@ -248,7 +282,45 @@ export function Settings() {
         <div style={{ flex: 1 }}>
           {activeSection === 'keylime' && (
             <div className="section">
-              <h2 className="section__title">Keylime Connection</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h2 className="section__title" style={{ margin: 0 }}>Keylime Connection</h2>
+                <div style={{
+                  display: 'inline-flex',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden',
+                }}>
+                  <button
+                    onClick={() => handleEnvModeSwitch('mock')}
+                    style={{
+                      padding: '5px 14px',
+                      fontSize: '12px',
+                      fontWeight: envMode === 'mock' ? 600 : 400,
+                      border: 'none',
+                      background: envMode === 'mock' ? 'var(--color-primary)' : 'var(--color-surface)',
+                      color: envMode === 'mock' ? 'white' : 'var(--color-text-secondary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Mock
+                  </button>
+                  <button
+                    onClick={() => handleEnvModeSwitch('production')}
+                    style={{
+                      padding: '5px 14px',
+                      fontSize: '12px',
+                      fontWeight: envMode === 'production' ? 600 : 400,
+                      border: 'none',
+                      borderLeft: '1px solid var(--color-border)',
+                      background: envMode === 'production' ? 'var(--color-primary)' : 'var(--color-surface)',
+                      color: envMode === 'production' ? 'white' : 'var(--color-text-secondary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Production
+                  </button>
+                </div>
+              </div>
               <div>
                 <div style={settingRowStyle}>
                   <div style={{ flex: 1 }}>
