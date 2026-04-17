@@ -5,9 +5,11 @@ import { KpiCard } from '@/components/common/KpiCard';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { alertsApi } from '@/api/alerts';
+import { useFormatTimestamp } from '@/store/visualizationStore';
 import type { Alert } from '@/types';
 
 export function Alerts() {
+  const fmtTs = useFormatTimestamp();
   const [searchParams, setSearchParams] = useSearchParams();
   const [severityFilter, setSeverityFilter] = useState(searchParams.get('severity') ?? '');
   const [stateFilter, setStateFilter] = useState(searchParams.get('state') ?? '');
@@ -70,7 +72,12 @@ export function Alerts() {
       sortable: true,
       render: (row: Alert) => <StatusBadge label={row.state} />,
     },
-    { key: 'created_timestamp', header: 'Created', sortable: true },
+    {
+      key: 'created_timestamp',
+      header: 'Created',
+      sortable: true,
+      render: (row: Alert) => <span>{fmtTs(row.created_timestamp)}</span>,
+    },
     {
       key: 'actions',
       header: 'Actions',

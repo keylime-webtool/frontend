@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { useFormatTimestamp } from '@/store/visualizationStore';
 import { agentsApi } from '@/api/agents';
 
 interface AgentDetail {
@@ -127,6 +128,7 @@ const EVENT_VARIANTS: Record<string, 'success' | 'warning' | 'danger' | 'info' |
 };
 
 function TimelineTab({ agentId }: { agentId: string }) {
+  const fmtTs = useFormatTimestamp();
   const { data } = useQuery({
     queryKey: ['agent', agentId, 'timeline'],
     queryFn: () => agentsApi.timeline(agentId),
@@ -152,7 +154,7 @@ function TimelineTab({ agentId }: { agentId: string }) {
               {events.map((ev, i) => (
                 <tr key={i} className="data-table__row">
                   <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px', whiteSpace: 'nowrap' }}>
-                    {new Date(ev.timestamp).toLocaleString()}
+                    {fmtTs(ev.timestamp)}
                   </td>
                   <td className="data-table__td">
                     <StatusBadge
