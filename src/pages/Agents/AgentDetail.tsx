@@ -385,6 +385,7 @@ const RAW_SOURCE_LABELS: Record<RawSource, string> = {
 
 function RawTab({ agentId }: { agentId: string }) {
   const [source, setSource] = useState<RawSource>('combined');
+  const [copied, setCopied] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['agent', agentId, 'raw', source],
@@ -392,35 +393,63 @@ function RawTab({ agentId }: { agentId: string }) {
     select: (res) => res.data,
   });
 
+  const handleCopy = () => {
+    const text = data ? JSON.stringify(data, null, 2) : '';
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
     <div style={{ minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
         <h3 className="section__title" style={{ margin: 0 }}>Raw Data</h3>
-        <div style={{
-          display: 'inline-flex',
-          border: '1px solid var(--color-border)',
-          borderRadius: 'var(--radius-sm)',
-          overflow: 'hidden',
-          flexShrink: 0,
-        }}>
-          {RAW_SOURCES.map((s, i) => (
-            <button
-              key={s}
-              onClick={() => setSource(s)}
-              style={{
-                padding: '5px 14px',
-                fontSize: '12px',
-                fontWeight: source === s ? 600 : 400,
-                border: 'none',
-                borderLeft: i > 0 ? '1px solid var(--color-border)' : 'none',
-                background: source === s ? 'var(--color-primary)' : 'var(--color-surface)',
-                color: source === s ? 'white' : 'var(--color-text-secondary)',
-                cursor: 'pointer',
-              }}
-            >
-              {RAW_SOURCE_LABELS[s]}
-            </button>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <div style={{
+            display: 'inline-flex',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            overflow: 'hidden',
+          }}>
+            {RAW_SOURCES.map((s, i) => (
+              <button
+                key={s}
+                onClick={() => setSource(s)}
+                style={{
+                  padding: '5px 14px',
+                  fontSize: '12px',
+                  fontWeight: source === s ? 600 : 400,
+                  border: 'none',
+                  borderLeft: i > 0 ? '1px solid var(--color-border)' : 'none',
+                  background: source === s ? 'var(--color-primary)' : 'var(--color-surface)',
+                  color: source === s ? 'white' : 'var(--color-text-secondary)',
+                  cursor: 'pointer',
+                }}
+              >
+                {RAW_SOURCE_LABELS[s]}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={handleCopy}
+            disabled={!data || isLoading}
+            title={copied ? 'Copied!' : 'Copy to clipboard'}
+            aria-label={copied ? 'Copied to clipboard' : 'Copy raw data to clipboard'}
+            style={{
+              padding: '5px 10px',
+              fontSize: '14px',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-sm)',
+              background: copied ? 'var(--color-success, #34a853)' : 'var(--color-surface)',
+              color: copied ? '#fff' : 'var(--color-text-secondary)',
+              cursor: data && !isLoading ? 'pointer' : 'not-allowed',
+              opacity: data && !isLoading ? 1 : 0.5,
+              transition: 'background 0.15s, color 0.15s',
+            }}
+          >
+            {copied ? '\u2713' : '\u2398'}
+          </button>
         </div>
       </div>
       <pre
