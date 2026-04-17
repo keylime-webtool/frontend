@@ -151,9 +151,9 @@ export function Dashboard() {
           title="Attestation Success Rate"
           value={
             attestationSummary?.success_rate != null
-              ? `${attestationSummary.success_rate.toFixed(1)}%`
+              ? `${attestationSummary.success_rate === 100 ? '100.0' : attestationSummary.success_rate.toFixed(2)}%`
               : agentAttestation
-                ? `${agentAttestation.successRate.toFixed(1)}%`
+                ? `${agentAttestation.successRate === 100 ? '100.0' : agentAttestation.successRate.toFixed(2)}%`
                 : '--'
           }
           variant="success"
