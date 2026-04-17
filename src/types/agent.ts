@@ -1,5 +1,7 @@
 export type AgentState =
   | 'registered'
+  | 'start'
+  | 'saved'
   | 'get_quote'
   | 'provide_v'
   | 'failed'

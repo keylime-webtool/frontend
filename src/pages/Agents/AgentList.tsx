@@ -46,7 +46,7 @@ export function AgentList() {
 
   const isSearchMode = search.trim().length > 0;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['agents', page, stateFilter, modeFilter, search],
     queryFn: async () => {
       if (isSearchMode) {
@@ -236,6 +236,13 @@ export function AgentList() {
       {isLoading ? (
         <div className="placeholder">
           <div className="placeholder__text">Loading agents...</div>
+        </div>
+      ) : error ? (
+        <div className="placeholder">
+          <div className="placeholder__text">Failed to load agents</div>
+          <div className="placeholder__subtext" style={{ color: 'var(--color-danger, #ea4335)' }}>
+            {(error as Error).message || 'Could not reach the backend. Check Settings and Integrations.'}
+          </div>
         </div>
       ) : (
         <>
