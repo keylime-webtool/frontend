@@ -3,6 +3,17 @@ import { create } from 'zustand';
 
 export type Theme = 'light' | 'dark';
 
+export const DATE_FORMATS = [
+  'YYYY-MM-DD',
+  'YYYY/MM/DD',
+  'DD/MM/YYYY',
+  'MM/DD/YYYY',
+  'DD-MM-YYYY',
+  'MM-DD-YYYY',
+] as const;
+
+export type DateFormat = typeof DATE_FORMATS[number];
+
 interface VisualizationState {
   theme: Theme;
   autoRefresh: boolean;
@@ -12,6 +23,7 @@ interface VisualizationState {
   tablePageSize: number;
   timezone: string;
   timezoneAutoDetect: boolean;
+  dateFormat: DateFormat;
   setTheme: (theme: Theme) => void;
   setAutoRefresh: (enabled: boolean) => void;
   setRefreshInterval: (seconds: number) => void;
@@ -20,6 +32,7 @@ interface VisualizationState {
   setTablePageSize: (size: number) => void;
   setTimezone: (tz: string) => void;
   setTimezoneAutoDetect: (auto: boolean) => void;
+  setDateFormat: (format: DateFormat) => void;
 }
 
 const STORAGE_KEY = 'visualization-settings';
@@ -43,6 +56,7 @@ function saveSettings(state: Partial<VisualizationState>) {
     tablePageSize: state.tablePageSize,
     timezone: state.timezone,
     timezoneAutoDetect: state.timezoneAutoDetect,
+    dateFormat: state.dateFormat,
   }));
 }
 
@@ -60,6 +74,9 @@ applyTheme(initialTheme);
 
 const initialAutoDetect = saved.timezoneAutoDetect ?? true;
 const initialTimezone = initialAutoDetect ? getBrowserTimezone() : (saved.timezone ?? getBrowserTimezone());
+const initialDateFormat: DateFormat = (DATE_FORMATS as readonly string[]).includes(saved.dateFormat as string)
+  ? (saved.dateFormat as DateFormat)
+  : 'DD-MM-YYYY';
 
 export const useVisualizationStore = create<VisualizationState>((set) => ({
   theme: initialTheme,
@@ -70,6 +87,7 @@ export const useVisualizationStore = create<VisualizationState>((set) => ({
   tablePageSize: saved.tablePageSize ?? 25,
   timezone: initialTimezone,
   timezoneAutoDetect: initialAutoDetect,
+  dateFormat: initialDateFormat,
   setTheme: (theme) => {
     applyTheme(theme);
     set((s) => { const next = { ...s, theme }; saveSettings(next); return { theme }; });
@@ -93,31 +111,53 @@ export const useVisualizationStore = create<VisualizationState>((set) => ({
       saveSettings(next);
       return { timezoneAutoDetect, timezone };
     }),
+  setDateFormat: (dateFormat) =>
+    set((s) => { const next = { ...s, dateFormat }; saveSettings(next); return { dateFormat }; }),
 }));
 
-/**
- * Format a timestamp string or Date using the configured timezone.
- * Returns a locale-formatted string with date and time.
- */
+function formatDatePart(date: Date, format: DateFormat, timezone: string): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: timezone,
+  }).formatToParts(date);
+  const y = parts.find((p) => p.type === 'year')!.value;
+  const m = parts.find((p) => p.type === 'month')!.value;
+  const d = parts.find((p) => p.type === 'day')!.value;
+  switch (format) {
+    case 'YYYY/MM/DD': return `${y}/${m}/${d}`;
+    case 'DD/MM/YYYY': return `${d}/${m}/${y}`;
+    case 'MM/DD/YYYY': return `${m}/${d}/${y}`;
+    case 'YYYY-MM-DD': return `${y}-${m}-${d}`;
+    case 'DD-MM-YYYY': return `${d}-${m}-${y}`;
+    case 'MM-DD-YYYY': return `${m}-${d}-${y}`;
+  }
+}
+
 export function formatTimestamp(
   value: string | number | Date | null | undefined,
   timezone: string,
+  dateFormat?: DateFormat,
   options?: Intl.DateTimeFormatOptions,
 ): string {
   if (value == null) return '--';
   const date = value instanceof Date ? value : new Date(value);
   if (isNaN(date.getTime())) return String(value);
-  return date.toLocaleString(undefined, { timeZone: timezone, ...options });
+  if (options) {
+    return date.toLocaleString(undefined, { timeZone: timezone, ...options });
+  }
+  const datePart = formatDatePart(date, dateFormat ?? 'YYYY-MM-DD', timezone);
+  const timePart = date.toLocaleTimeString(undefined, { timeZone: timezone });
+  return `${datePart}, ${timePart}`;
 }
 
-/**
- * Hook that returns a formatter bound to the current timezone setting.
- */
 export function useFormatTimestamp() {
   const timezone = useVisualizationStore((s) => s.timezone);
+  const dateFormat = useVisualizationStore((s) => s.dateFormat);
   return useCallback(
     (value: string | number | Date | null | undefined, options?: Intl.DateTimeFormatOptions) =>
-      formatTimestamp(value, timezone, options),
-    [timezone],
+      formatTimestamp(value, timezone, dateFormat, options),
+    [timezone, dateFormat],
   );
 }
