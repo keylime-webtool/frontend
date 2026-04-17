@@ -88,7 +88,7 @@ export function AgentList() {
       header: 'IP:Port',
       sortable: true,
       render: (row: AgentRow) => (
-        <span>{row.ip}{row.port ? `:${row.port}` : ''}</span>
+        <span>{row.ip}{row.port != null && row.port > 0 ? `:${row.port}` : ''}</span>
       ),
     },
     { key: 'attestation_mode', header: 'Mode', sortable: true },
