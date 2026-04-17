@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, Link } from 'react-router-dom';
 import { KpiCard } from '@/components/common/KpiCard';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { attestationsApi } from '@/api/attestations';
@@ -66,7 +66,7 @@ export function Attestations() {
                   <div>
                     <div style={{ fontWeight: 500 }}>{(f.failure_type ?? '').replace(/_/g, ' ')}</div>
                     <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>{f.detail ?? ''}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', fontFamily: 'monospace' }}>{f.agent_id}</div>
+                    <Link to={`/agents/${f.agent_id}`} style={{ fontSize: '11px', color: 'var(--color-primary)', fontFamily: 'monospace', textDecoration: 'none' }}>{f.agent_id}</Link>
                   </div>
                   <StatusBadge label={f.severity} />
                 </li>
