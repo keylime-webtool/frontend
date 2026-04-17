@@ -12,6 +12,7 @@ import type { AgentListParams } from '@/types';
 interface AgentRow {
   id: string;
   ip: string;
+  port: number | null;
   state: string;
   attestation_mode: string;
   last_attestation: string | null;
@@ -82,7 +83,14 @@ export function AgentList() {
         </Link>
       ),
     },
-    { key: 'ip', header: 'IP Address', sortable: true },
+    {
+      key: 'ip',
+      header: 'IP:Port',
+      sortable: true,
+      render: (row: AgentRow) => (
+        <span>{row.ip}{row.port ? `:${row.port}` : ''}</span>
+      ),
+    },
     { key: 'attestation_mode', header: 'Mode', sortable: true },
     {
       key: 'state',
