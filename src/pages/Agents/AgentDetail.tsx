@@ -15,13 +15,13 @@ interface AgentDetail {
   [key: string]: unknown;
 }
 
-const TABS = ['PCR Values', 'IMA Log', 'Boot Log', 'Certificates', 'Timeline', 'Raw Data'] as const;
+const TABS = ['TPM Policy', 'IMA Log', 'Boot Log', 'Certificates', 'Timeline', 'Raw Data'] as const;
 type Tab = (typeof TABS)[number];
 
 export function AgentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('PCR Values');
+  const [activeTab, setActiveTab] = useState<Tab>('TPM Policy');
 
   const { data: agent, isLoading } = useQuery({
     queryKey: ['agent', id],
@@ -90,18 +90,18 @@ export function AgentDetailPage() {
       </div>
 
       <div className="section">
-        <TabContent tab={activeTab} agentId={id!} />
+        <TabContent tab={activeTab} agentId={id!} agent={agent} />
       </div>
     </div>
   );
 }
 
-function TabContent({ tab, agentId }: { tab: Tab; agentId: string }) {
+function TabContent({ tab, agentId, agent }: { tab: Tab; agentId: string; agent: AgentDetail }) {
   switch (tab) {
     case 'Timeline':
       return <TimelineTab agentId={agentId} />;
-    case 'PCR Values':
-      return <PcrTab agentId={agentId} />;
+    case 'TPM Policy':
+      return <TpmPolicyTab tpmPolicy={agent.tpm_policy as string | null | undefined} />;
     case 'IMA Log':
       return <ImaTab agentId={agentId} />;
     case 'Boot Log':
@@ -179,43 +179,79 @@ function TimelineTab({ agentId }: { agentId: string }) {
   );
 }
 
-function PcrTab({ agentId }: { agentId: string }) {
-  const { data } = useQuery({
-    queryKey: ['agent', agentId, 'pcr'],
-    queryFn: () => agentsApi.pcrValues(agentId),
-    select: (res) => res.data,
-  });
+function TpmPolicyTab({ tpmPolicy }: { tpmPolicy: string | null | undefined }) {
+  // tpm_policy is a JSON string like: {"0": ["0xhash..."], "mask": "0x1"}
+  let parsed: Record<string, unknown> | null = null;
+  if (tpmPolicy) {
+    try {
+      parsed = JSON.parse(tpmPolicy);
+    } catch {
+      // invalid JSON — show raw
+    }
+  }
+
+  if (!parsed) {
+    return (
+      <div>
+        <h3 className="section__title">TPM Policy</h3>
+        {tpmPolicy ? (
+          <pre style={{
+            background: 'var(--color-bg)',
+            color: 'var(--color-text)',
+            padding: '16px',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '13px',
+            fontFamily: 'monospace',
+          }}>
+            {tpmPolicy}
+          </pre>
+        ) : (
+          <div className="placeholder">
+            <div className="placeholder__text">No TPM policy configured</div>
+            <div className="placeholder__subtext">
+              This agent does not have a TPM policy with expected PCR values.
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const mask = parsed.mask as string | undefined;
+  const pcrEntries = Object.entries(parsed)
+    .filter(([key]) => key !== 'mask')
+    .sort(([a], [b]) => Number(a) - Number(b));
 
   return (
     <div>
-      <h3 className="section__title">PCR Values</h3>
-      {data ? (
-        <>
-          <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginBottom: '12px' }}>
-            Hash algorithm: <strong>{data.hash_alg}</strong>
-          </p>
-          <table className="data-table" style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
-            <thead>
-              <tr>
-                <th className="data-table__th">PCR Index</th>
-                <th className="data-table__th">Value</th>
+      <h3 className="section__title">TPM Policy</h3>
+      {mask && (
+        <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginBottom: '12px' }}>
+          PCR mask: <strong style={{ fontFamily: 'monospace' }}>{mask}</strong>
+        </p>
+      )}
+      {pcrEntries.length > 0 ? (
+        <table className="data-table" style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
+          <thead>
+            <tr>
+              <th className="data-table__th">PCR Index</th>
+              <th className="data-table__th">Expected Values</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pcrEntries.map(([idx, values]) => (
+              <tr key={idx}>
+                <td className="data-table__td">{idx}</td>
+                <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px', wordBreak: 'break-all' }}>
+                  {Array.isArray(values) ? values.join(', ') : String(values)}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {Object.entries(data.pcrs)
-                .sort(([a], [b]) => Number(a) - Number(b))
-                .map(([idx, val]) => (
-                  <tr key={idx}>
-                    <td className="data-table__td">{idx}</td>
-                    <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{val}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </>
+            ))}
+          </tbody>
+        </table>
       ) : (
         <div className="placeholder">
-          <div className="placeholder__text">Loading PCR values...</div>
+          <div className="placeholder__text">No PCR entries in policy</div>
         </div>
       )}
     </div>
