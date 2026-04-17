@@ -1,4 +1,8 @@
 import { NavLink } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { performanceApi } from '@/api/performance';
+import { settingsApi } from '@/api/settings';
+import type { IntegrationService } from '@/types';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: '\u2302' },
@@ -13,7 +17,39 @@ const NAV_ITEMS = [
   { path: '/settings', label: 'Settings', icon: '\u2699' },
 ];
 
+function useHasServiceDown(): boolean {
+  const { data: backendStatus } = useQuery({
+    queryKey: ['integrations', 'backend-health'],
+    queryFn: async () => {
+      const start = performance.now();
+      try {
+        await settingsApi.getKeylime();
+        return { status: 'up' as const, latency_ms: Math.round(performance.now() - start) };
+      } catch {
+        return { status: 'down' as const, latency_ms: Math.round(performance.now() - start) };
+      }
+    },
+    refetchInterval: 1000,
+  });
+
+  const backendUp = backendStatus?.status === 'up';
+
+  const { data: services } = useQuery({
+    queryKey: ['integrations', 'status'],
+    queryFn: () => performanceApi.integrations(),
+    select: (res) => res.data,
+    refetchInterval: 1000,
+    enabled: backendUp,
+  });
+
+  if (backendStatus?.status === 'down') return true;
+  const svcList: IntegrationService[] = Array.isArray(services) ? services : [];
+  return svcList.some((s) => s.status.toLowerCase() === 'down');
+}
+
 export function Sidebar() {
+  const hasServiceDown = useHasServiceDown();
+
   return (
     <aside className="layout__sidebar">
       <NavLink to="/" className="sidebar__logo" style={{ textDecoration: 'none' }}>
@@ -34,6 +70,15 @@ export function Sidebar() {
               {item.icon}
             </span>
             {item.label}
+            {item.path === '/integrations' && hasServiceDown && (
+              <span
+                className="sidebar__alert-indicator"
+                title="One or more services are down"
+                aria-label="Service down"
+              >
+                !
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
