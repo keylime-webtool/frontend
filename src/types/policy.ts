@@ -24,7 +24,6 @@ export interface Policy {
   content: string;
   checksum: string;
   hash_algorithm: HashAlgorithm;
-  assigned_agents: number;
   versions: PolicyVersion[];
   approval_state: ApprovalState;
   drafter: string;
