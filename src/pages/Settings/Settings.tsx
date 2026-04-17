@@ -18,6 +18,13 @@ const COMPLIANCE_FRAMEWORKS = [
 const REFRESH_INTERVALS = [10, 15, 30, 60, 120];
 const PAGE_SIZES = [10, 25, 50, 100];
 
+// Intl.supportedValuesOf is available in all modern browsers but not yet
+// in older TypeScript lib definitions, so we cast to access it.
+const TIMEZONES: string[] =
+  typeof (Intl as Record<string, unknown>).supportedValuesOf === 'function'
+    ? (Intl as unknown as { supportedValuesOf: (key: string) => string[] }).supportedValuesOf('timeZone')
+    : ['UTC'];
+
 const settingRowStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
@@ -665,7 +672,7 @@ export function Settings() {
                   />
                 </div>
 
-                <div style={{ ...settingRowStyle, borderBottom: 'none' }}>
+                <div style={settingRowStyle}>
                   <div>
                     <div style={settingLabelStyle}>Table page size</div>
                     <div style={settingDescStyle}>Default number of rows per table page</div>
@@ -680,6 +687,51 @@ export function Settings() {
                       <option key={n} value={n}>{n} rows</option>
                     ))}
                   </select>
+                </div>
+
+                <div style={{ ...settingRowStyle, borderBottom: 'none' }}>
+                  <div>
+                    <div style={settingLabelStyle}>Timezone</div>
+                    <div style={settingDescStyle}>
+                      {viz.timezoneAutoDetect
+                        ? `Auto-detected: ${viz.timezone}`
+                        : 'Manually selected timezone for all timestamps'}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      onClick={() => viz.setTimezoneAutoDetect(!viz.timezoneAutoDetect)}
+                      style={{
+                        padding: '5px 14px',
+                        fontSize: '12px',
+                        fontWeight: viz.timezoneAutoDetect ? 600 : 400,
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-sm)',
+                        background: viz.timezoneAutoDetect ? 'var(--color-primary)' : 'var(--color-surface)',
+                        color: viz.timezoneAutoDetect ? 'white' : 'var(--color-text-secondary)',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                      aria-label="Auto-detect timezone"
+                    >
+                      Auto-Detect
+                    </button>
+                    <select
+                      value={viz.timezone}
+                      onChange={(e) => viz.setTimezone(e.target.value)}
+                      disabled={viz.timezoneAutoDetect}
+                      style={{
+                        ...selectStyle,
+                        opacity: viz.timezoneAutoDetect ? 0.5 : 1,
+                        cursor: viz.timezoneAutoDetect ? 'not-allowed' : 'pointer',
+                      }}
+                      aria-label="Timezone"
+                    >
+                      {TIMEZONES.map((tz) => (
+                        <option key={tz} value={tz}>{tz}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>

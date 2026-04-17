@@ -3,9 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { auditApi } from '@/api/audit';
+import { useFormatTimestamp } from '@/store/visualizationStore';
 import type { AuditLogEntry } from '@/types';
 
 export function AuditLog() {
+  const fmtTs = useFormatTimestamp();
   const [severity, setSeverity] = useState('');
 
   const { data, isLoading } = useQuery({
@@ -21,7 +23,12 @@ export function AuditLog() {
   });
 
   const columns = [
-    { key: 'timestamp', header: 'Timestamp', sortable: true },
+    {
+      key: 'timestamp',
+      header: 'Timestamp',
+      sortable: true,
+      render: (row: AuditLogEntry) => <span>{fmtTs(row.timestamp)}</span>,
+    },
     {
       key: 'severity',
       header: 'Severity',
@@ -63,7 +70,7 @@ export function AuditLog() {
             variant={chainStatus.verified ? 'success' : 'danger'}
           />
           <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-            {chainStatus.total_entries} entries &middot; Last verified: {chainStatus.last_verification}
+            {chainStatus.total_entries} entries &middot; Last verified: {fmtTs(chainStatus.last_verification)}
           </span>
         </div>
       )}

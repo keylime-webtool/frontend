@@ -10,6 +10,7 @@ import { attestationsApi } from '@/api/attestations';
 import { agentsApi } from '@/api/agents';
 import { alertsApi } from '@/api/alerts';
 import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useFormatTimestamp } from '@/store/visualizationStore';
 import type { Alert } from '@/types';
 
 type AlertChartDimension = 'severity' | 'type' | 'state';
@@ -58,6 +59,7 @@ const ATTESTED_STATES = new Set([
 export function Dashboard() {
   const { timeRange } = useOutletContext<{ timeRange: string }>();
   const navigate = useNavigate();
+  const fmtTs = useFormatTimestamp();
 
   const { data: agents } = useQuery({
     queryKey: ['agents', 'dashboard'],
@@ -81,11 +83,11 @@ export function Dashboard() {
     const raw = Array.isArray(attestationTimeline) ? attestationTimeline : [];
     return raw.map((point) => ({
       ...point,
-      label: new Date(point.hour).toLocaleString(undefined, {
+      label: fmtTs(point.hour, {
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
       }),
     }));
-  }, [attestationTimeline]);
+  }, [attestationTimeline, fmtTs]);
 
   const { data: alertSummary } = useQuery({
     queryKey: ['alerts', 'summary'],
