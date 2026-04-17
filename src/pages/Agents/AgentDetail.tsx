@@ -371,16 +371,56 @@ function CertsTab({ agentId }: { agentId: string }) {
   );
 }
 
+const RAW_SOURCES = ['combined', 'backend', 'registrar', 'verifier'] as const;
+type RawSource = (typeof RAW_SOURCES)[number];
+
+const RAW_SOURCE_LABELS: Record<RawSource, string> = {
+  combined: 'All',
+  backend: 'Backend',
+  registrar: 'Registrar',
+  verifier: 'Verifier',
+};
+
 function RawTab({ agentId }: { agentId: string }) {
-  const { data } = useQuery({
-    queryKey: ['agent', agentId, 'raw'],
-    queryFn: () => agentsApi.raw(agentId),
+  const [source, setSource] = useState<RawSource>('combined');
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['agent', agentId, 'raw', source],
+    queryFn: () => agentsApi.raw(agentId, source === 'combined' ? undefined : source),
     select: (res) => res.data,
   });
 
   return (
-    <div>
-      <h3 className="section__title">Raw Data</h3>
+    <div style={{ minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+        <h3 className="section__title" style={{ margin: 0 }}>Raw Data</h3>
+        <div style={{
+          display: 'inline-flex',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-sm)',
+          overflow: 'hidden',
+          flexShrink: 0,
+        }}>
+          {RAW_SOURCES.map((s, i) => (
+            <button
+              key={s}
+              onClick={() => setSource(s)}
+              style={{
+                padding: '5px 14px',
+                fontSize: '12px',
+                fontWeight: source === s ? 600 : 400,
+                border: 'none',
+                borderLeft: i > 0 ? '1px solid var(--color-border)' : 'none',
+                background: source === s ? 'var(--color-primary)' : 'var(--color-surface)',
+                color: source === s ? 'white' : 'var(--color-text-secondary)',
+                cursor: 'pointer',
+              }}
+            >
+              {RAW_SOURCE_LABELS[s]}
+            </button>
+          ))}
+        </div>
+      </div>
       <pre
         style={{
           background: 'var(--color-bg)',
@@ -391,9 +431,11 @@ function RawTab({ agentId }: { agentId: string }) {
           fontSize: '13px',
           fontFamily: 'monospace',
           maxHeight: '600px',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-all',
         }}
       >
-        {data ? JSON.stringify(data, null, 2) : 'Loading...'}
+        {isLoading ? 'Loading...' : data ? JSON.stringify(data, null, 2) : 'No data available'}
       </pre>
     </div>
   );

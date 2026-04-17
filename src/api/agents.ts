@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { Agent, AgentListParams, AgentPcrValues, ImaLogEntry, BootLogEntry, PaginatedResponse } from '@/types';
+import type { Agent, AgentListParams, ImaLogEntry, BootLogEntry, PaginatedResponse } from '@/types';
 import type { AttestationTimelinePoint } from '@/types';
 
 export const agentsApi = {
@@ -27,10 +27,6 @@ export const agentsApi = {
     return apiClient.get<AttestationTimelinePoint[]>(`/agents/${agentId}/timeline`);
   },
 
-  pcrValues(agentId: string) {
-    return apiClient.get<AgentPcrValues>(`/agents/${agentId}/pcr`);
-  },
-
   imaLog(agentId: string, params?: { search?: string }) {
     return apiClient.get<ImaLogEntry[]>(`/agents/${agentId}/ima-log`, { params });
   },
@@ -43,7 +39,8 @@ export const agentsApi = {
     return apiClient.get(`/agents/${agentId}/certificates`);
   },
 
-  raw(agentId: string) {
-    return apiClient.get(`/agents/${agentId}/raw`);
+  raw(agentId: string, source?: 'backend' | 'registrar' | 'verifier') {
+    const path = source ? `/agents/${agentId}/raw/${source}` : `/agents/${agentId}/raw`;
+    return apiClient.get(path);
   },
 };
