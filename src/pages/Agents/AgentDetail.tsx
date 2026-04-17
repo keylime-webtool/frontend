@@ -11,8 +11,6 @@ interface AgentDetail {
   port: number;
   state: string;
   attestation_mode: string;
-  ima_policy: string | null;
-  mb_policy: string | null;
   [key: string]: unknown;
 }
 
@@ -71,7 +69,6 @@ export function AgentDetailPage() {
           </h1>
           <p className="page-header__subtitle">
             {agent.ip}:{agent.port} &middot; {agent.attestation_mode} mode
-            {agent.ima_policy && <> &middot; Policy: {agent.ima_policy}</>}
           </p>
         </div>
       </div>

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -31,24 +30,6 @@ export function Policies() {
       render: (row: Policy) => (
         <StatusBadge label={KIND_LABELS[row.kind] ?? row.kind ?? '--'} variant="info" />
       ),
-    },
-    {
-      key: 'assigned_agents',
-      header: 'Agents',
-      sortable: true,
-      render: (row: Policy) => {
-        const count = row.assigned_agents ?? 0;
-        if (count === 0) return <span>0</span>;
-        return (
-          <Link
-            to={`/agents?policy=${encodeURIComponent(row.name)}`}
-            style={{ color: 'var(--color-primary)', fontWeight: 500 }}
-            title={`View agents with policy "${row.name}"`}
-          >
-            {count}
-          </Link>
-        );
-      },
     },
     { key: 'checksum', header: 'Checksum', render: (row: Policy) => (
       <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>

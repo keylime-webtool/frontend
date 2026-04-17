@@ -24,8 +24,6 @@ export interface Agent {
   state: AgentState;
   verifier_id: string;
   registrar_id: string;
-  ima_policy: string;
-  mb_policy: string;
   last_attestation: string;
   consecutive_failures: number;
   registration_date: string;
@@ -41,7 +39,6 @@ export interface AgentListParams {
   state?: AgentState;
   search?: string;
   datacenter?: string;
-  policy?: string;
   ip_range?: string;
 }
 
