@@ -158,11 +158,27 @@ export function Settings() {
     },
   });
 
-  const handleSaveKeylime = (_field?: string) => {
-    updateMutation.mutate({
-      verifier_url: verifierUrl.trim(),
-      registrar_url: registrarUrl.trim(),
-    });
+  // Detect whether any connection URL has changed from its saved value
+  const backendUrlChanged = backendUrlField.trim() !== backendUrlInitial;
+  const verifierUrlChanged = formLoaded && verifierUrl.trim() !== (keylimeSettings?.verifier_url ?? '');
+  const registrarUrlChanged = formLoaded && registrarUrl.trim() !== (keylimeSettings?.registrar_url ?? '');
+  const connectionHasChanges = backendUrlChanged || verifierUrlChanged || registrarUrlChanged;
+
+  const handleApplyConnection = async () => {
+    // Save Backend URL (stored in browser) if changed
+    if (backendUrlChanged) {
+      setBackendUrl(backendUrlField.trim());
+    }
+    // Save Verifier + Registrar to backend API, then reload
+    if (verifierUrlChanged || registrarUrlChanged) {
+      updateMutation.mutate(
+        { verifier_url: verifierUrl.trim(), registrar_url: registrarUrl.trim() },
+        { onSuccess: () => window.location.reload() },
+      );
+    } else {
+      // Only backend URL changed — reload immediately
+      window.location.reload();
+    }
   };
 
   const [certSaveStatus, setCertSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -227,12 +243,6 @@ export function Settings() {
         ca_cert_path: caCertPath.trim() || null,
       });
     }
-  };
-
-  const handleSaveBackendUrl = () => {
-    setBackendUrl(backendUrlField);
-    queryClient.invalidateQueries();
-    window.location.reload();
   };
 
   const sections = [
@@ -327,32 +337,14 @@ export function Settings() {
                     <div style={settingLabelStyle}>Backend URL</div>
                     <div style={settingDescStyle}>Base URL of the Keylime Webtool Backend API</div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      value={backendUrlField}
-                      onChange={(e) => setBackendUrlField(e.target.value)}
-                      placeholder="http://localhost:8080"
-                      style={{ ...selectStyle, width: '260px' }}
-                      aria-label="Backend URL"
-                    />
-                    <button
-                      onClick={handleSaveBackendUrl}
-                      disabled={backendUrlField === backendUrlInitial}
-                      style={{
-                        padding: '6px 16px',
-                        fontSize: '13px',
-                        fontWeight: 500,
-                        border: 'none',
-                        borderRadius: 'var(--radius-sm)',
-                        background: backendUrlField !== backendUrlInitial ? 'var(--color-primary)' : 'var(--color-border)',
-                        color: backendUrlField !== backendUrlInitial ? 'white' : 'var(--color-text-secondary)',
-                        cursor: backendUrlField !== backendUrlInitial ? 'pointer' : 'default',
-                      }}
-                    >
-                      Apply
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    value={backendUrlField}
+                    onChange={(e) => setBackendUrlField(e.target.value)}
+                    placeholder="http://localhost:8080"
+                    style={{ ...selectStyle, width: '260px' }}
+                    aria-label="Backend URL"
+                  />
                 </div>
 
                 <div style={settingRowStyle}>
@@ -360,32 +352,14 @@ export function Settings() {
                     <div style={settingLabelStyle}>Verifier URL</div>
                     <div style={settingDescStyle}>Base URL of the Keylime Verifier API</div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      value={verifierUrl}
-                      onChange={(e) => setVerifierUrl(e.target.value)}
-                      placeholder="http://localhost:8881"
-                      style={{ ...selectStyle, width: '260px' }}
-                      aria-label="Verifier URL"
-                    />
-                    <button
-                      onClick={() => handleSaveKeylime('verifier')}
-                      disabled={!formLoaded || verifierUrl === keylimeSettings?.verifier_url || saveStatus === 'saving'}
-                      style={{
-                        padding: '6px 16px',
-                        fontSize: '13px',
-                        fontWeight: 500,
-                        border: 'none',
-                        borderRadius: 'var(--radius-sm)',
-                        background: formLoaded && verifierUrl !== keylimeSettings?.verifier_url ? 'var(--color-primary)' : 'var(--color-border)',
-                        color: formLoaded && verifierUrl !== keylimeSettings?.verifier_url ? 'white' : 'var(--color-text-secondary)',
-                        cursor: formLoaded && verifierUrl !== keylimeSettings?.verifier_url ? 'pointer' : 'default',
-                      }}
-                    >
-                      Apply
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    value={verifierUrl}
+                    onChange={(e) => setVerifierUrl(e.target.value)}
+                    placeholder="https://localhost:8881"
+                    style={{ ...selectStyle, width: '260px' }}
+                    aria-label="Verifier URL"
+                  />
                 </div>
                 {verifierUrl.trim().startsWith('http://') && (
                   <div style={{
@@ -401,37 +375,19 @@ export function Settings() {
                   </div>
                 )}
 
-                <div style={{ ...settingRowStyle, borderBottom: 'none' }}>
+                <div style={settingRowStyle}>
                   <div style={{ flex: 1 }}>
                     <div style={settingLabelStyle}>Registrar URL</div>
                     <div style={settingDescStyle}>Base URL of the Keylime Registrar API</div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      value={registrarUrl}
-                      onChange={(e) => setRegistrarUrl(e.target.value)}
-                      placeholder="http://localhost:8890"
-                      style={{ ...selectStyle, width: '260px' }}
-                      aria-label="Registrar URL"
-                    />
-                    <button
-                      onClick={() => handleSaveKeylime('registrar')}
-                      disabled={!formLoaded || registrarUrl === keylimeSettings?.registrar_url || saveStatus === 'saving'}
-                      style={{
-                        padding: '6px 16px',
-                        fontSize: '13px',
-                        fontWeight: 500,
-                        border: 'none',
-                        borderRadius: 'var(--radius-sm)',
-                        background: formLoaded && registrarUrl !== keylimeSettings?.registrar_url ? 'var(--color-primary)' : 'var(--color-border)',
-                        color: formLoaded && registrarUrl !== keylimeSettings?.registrar_url ? 'white' : 'var(--color-text-secondary)',
-                        cursor: formLoaded && registrarUrl !== keylimeSettings?.registrar_url ? 'pointer' : 'default',
-                      }}
-                    >
-                      Apply
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    value={registrarUrl}
+                    onChange={(e) => setRegistrarUrl(e.target.value)}
+                    placeholder="https://localhost:8891"
+                    style={{ ...selectStyle, width: '260px' }}
+                    aria-label="Registrar URL"
+                  />
                 </div>
                 {registrarUrl.trim().startsWith('http://') && (
                   <div style={{
@@ -446,6 +402,35 @@ export function Settings() {
                     Note: The Keylime Registrar typically requires HTTPS. HTTP may only work with mock/development instances.
                   </div>
                 )}
+
+                <div style={{ ...settingRowStyle, borderBottom: 'none', justifyContent: 'flex-end', gap: '12px' }}>
+                  {saveStatus === 'saved' && (
+                    <span style={{ color: 'var(--color-success, #34a853)', fontSize: '14px' }}>
+                      Settings applied
+                    </span>
+                  )}
+                  {saveStatus === 'error' && (
+                    <span style={{ color: 'var(--color-danger, #ea4335)', fontSize: '14px' }}>
+                      Failed to apply settings
+                    </span>
+                  )}
+                  <button
+                    onClick={handleApplyConnection}
+                    disabled={!connectionHasChanges || saveStatus === 'saving'}
+                    style={{
+                      padding: '8px 24px',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      border: 'none',
+                      borderRadius: 'var(--radius-sm)',
+                      background: connectionHasChanges ? 'var(--color-primary)' : 'var(--color-border)',
+                      color: connectionHasChanges ? 'white' : 'var(--color-text-secondary)',
+                      cursor: connectionHasChanges && saveStatus !== 'saving' ? 'pointer' : 'default',
+                    }}
+                  >
+                    {saveStatus === 'saving' ? 'Applying...' : 'Apply Changes'}
+                  </button>
+                </div>
               </div>
             </div>
           )}
