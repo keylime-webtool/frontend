@@ -90,12 +90,17 @@ export function AgentList() {
       sortable: true,
       render: (row: AgentRow) => <StatusBadge label={row.state} />,
     },
-    { key: 'assigned_policy', header: 'IMA Policy', sortable: true },
+    {
+      key: 'assigned_policy',
+      header: 'IMA Policy',
+      sortable: true,
+      render: (row: AgentRow) => <span>{row.assigned_policy || '--'}</span>,
+    },
     {
       key: 'mb_policy',
       header: 'MB Policy',
       sortable: true,
-      render: (row: AgentRow) => <span>{row.mb_policy ?? '--'}</span>,
+      render: (row: AgentRow) => <span>{row.mb_policy || '--'}</span>,
     },
     {
       key: 'last_attestation',
