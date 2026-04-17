@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { useVisualizationStore } from '@/store/visualizationStore';
+import { useVisualizationStore, DATE_FORMATS, type DateFormat } from '@/store/visualizationStore';
 import { settingsApi } from '@/api/settings';
 import { getBackendUrl, setBackendUrl } from '@/api/client';
 import type { KeylimeSettings, CertificateSettings } from '@/api/settings';
@@ -689,7 +689,7 @@ export function Settings() {
                   </select>
                 </div>
 
-                <div style={{ ...settingRowStyle, borderBottom: 'none' }}>
+                <div style={settingRowStyle}>
                   <div>
                     <div style={settingLabelStyle}>Timezone</div>
                     <div style={settingDescStyle}>
@@ -732,6 +732,23 @@ export function Settings() {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                <div style={{ ...settingRowStyle, borderBottom: 'none' }}>
+                  <div>
+                    <div style={settingLabelStyle}>Date format</div>
+                    <div style={settingDescStyle}>Display format for dates in all timestamps</div>
+                  </div>
+                  <select
+                    value={viz.dateFormat}
+                    onChange={(e) => viz.setDateFormat(e.target.value as DateFormat)}
+                    style={selectStyle}
+                    aria-label="Date format"
+                  >
+                    {DATE_FORMATS.map((fmt) => (
+                      <option key={fmt} value={fmt}>{fmt}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
