@@ -632,7 +632,12 @@ export function Settings() {
                   <select
                     value={viz.refreshInterval}
                     onChange={(e) => viz.setRefreshInterval(Number(e.target.value))}
-                    style={selectStyle}
+                    disabled={!viz.autoRefresh}
+                    style={{
+                      ...selectStyle,
+                      opacity: viz.autoRefresh ? 1 : 0.5,
+                      cursor: viz.autoRefresh ? 'pointer' : 'not-allowed',
+                    }}
                     aria-label="Refresh interval"
                   >
                     {REFRESH_INTERVALS.map((s) => (
