@@ -51,7 +51,7 @@ export function Attestations() {
         />
         <KpiCard
           title="Success Rate"
-          value={summary?.success_rate != null ? `${summary.success_rate.toFixed(1)}%` : '--'}
+          value={summary?.success_rate != null ? `${summary.success_rate === 100 ? '100.0' : summary.success_rate.toFixed(2)}%` : '--'}
           variant="success"
         />
       </div>
