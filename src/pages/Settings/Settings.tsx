@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { useVisualizationStore, DATE_FORMATS, type DateFormat } from '@/store/visualizationStore';
+import { useVisualizationStore, DATE_FORMATS, type DateFormat, type TimeFormat } from '@/store/visualizationStore';
 import { settingsApi } from '@/api/settings';
 import { getBackendUrl, setBackendUrl } from '@/api/client';
 import type { KeylimeSettings, CertificateSettings } from '@/api/settings';
@@ -734,7 +734,7 @@ export function Settings() {
                   </div>
                 </div>
 
-                <div style={{ ...settingRowStyle, borderBottom: 'none' }}>
+                <div style={settingRowStyle}>
                   <div>
                     <div style={settingLabelStyle}>Date format</div>
                     <div style={settingDescStyle}>Display format for dates in all timestamps</div>
@@ -748,6 +748,22 @@ export function Settings() {
                     {DATE_FORMATS.map((fmt) => (
                       <option key={fmt} value={fmt}>{fmt}</option>
                     ))}
+                  </select>
+                </div>
+
+                <div style={{ ...settingRowStyle, borderBottom: 'none' }}>
+                  <div>
+                    <div style={settingLabelStyle}>Time format</div>
+                    <div style={settingDescStyle}>12-hour (AM/PM) or 24-hour clock for all timestamps</div>
+                  </div>
+                  <select
+                    value={viz.timeFormat}
+                    onChange={(e) => viz.setTimeFormat(e.target.value as TimeFormat)}
+                    style={selectStyle}
+                    aria-label="Time format"
+                  >
+                    <option value="24h">24h (14:30:00)</option>
+                    <option value="12h">12h (02:30:00 PM)</option>
                   </select>
                 </div>
               </div>
