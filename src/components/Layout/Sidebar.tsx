@@ -53,7 +53,7 @@ export function Sidebar() {
   return (
     <aside className="layout__sidebar">
       <NavLink to="/" className="sidebar__logo" style={{ textDecoration: 'none' }}>
-        <img className="sidebar__logo-icon" src="/keylime-logo.png" alt="Keylime logo" />
+        <img className="sidebar__logo-icon" src="/keylime-logo-transparent-background.svg" alt="Keylime logo" />
         Keylime Dashboard
       </NavLink>
       <nav className="sidebar__nav" aria-label="Main navigation">
