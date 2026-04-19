@@ -1,4 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="6" fill="#1a73e8"/>
-  <text x="16" y="22" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white">K</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <circle cx="64" cy="64" r="62" fill="#4caf50" stroke="#2e7d32" stroke-width="4"/>
+  <circle cx="64" cy="64" r="52" fill="#1b5e20"/>
+  <g fill="#76ff03">
+    <ellipse cx="64" cy="34" rx="8" ry="22" transform="rotate(0,64,64)"/>
+    <ellipse cx="64" cy="34" rx="8" ry="22" transform="rotate(45,64,64)"/>
+    <ellipse cx="64" cy="34" rx="8" ry="22" transform="rotate(90,64,64)"/>
+    <ellipse cx="64" cy="34" rx="8" ry="22" transform="rotate(135,64,64)"/>
+    <ellipse cx="64" cy="34" rx="8" ry="22" transform="rotate(180,64,64)"/>
+    <ellipse cx="64" cy="34" rx="8" ry="22" transform="rotate(225,64,64)"/>
+    <ellipse cx="64" cy="34" rx="8" ry="22" transform="rotate(270,64,64)"/>
+    <ellipse cx="64" cy="34" rx="8" ry="22" transform="rotate(315,64,64)"/>
+  </g>
+  <circle cx="64" cy="50" r="14" fill="#0d1117"/>
+  <path d="M55 56 L50 96 L78 96 L73 56 Z" fill="#0d1117"/>
 </svg>
