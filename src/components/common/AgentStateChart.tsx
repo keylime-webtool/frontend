@@ -18,6 +18,7 @@ const STATE_COLORS: Record<string, string> = {
   PASS: '#34a853',
   FAIL: '#ea4335',
   PENDING: '#f9ab00',
+  TIMEOUT: '#ff6d00',
   UNKNOWN: '#bdbdbd',
 };
 

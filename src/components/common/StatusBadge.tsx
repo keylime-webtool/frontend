@@ -21,7 +21,6 @@ const VARIANT_MAP: Record<string, BadgeVariant> = {
   up: 'success',
   down: 'danger',
   high_load: 'warning',
-  timeout: 'warning',
   not_configured: 'neutral',
   // Alert severity
   critical: 'danger',
@@ -29,6 +28,7 @@ const VARIANT_MAP: Record<string, BadgeVariant> = {
   info: 'info',
   // Push-mode agent states
   pending: 'warning',
+  timeout: 'danger',
   // Generic
   pass: 'success',
   fail: 'danger',
