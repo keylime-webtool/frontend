@@ -8,7 +8,8 @@ export type AgentState =
   | 'retry'
   | 'terminated'
   | 'invalid_quote'
-  | 'tenant_failed';
+  | 'tenant_failed'
+  | 'timeout';
 
 export type ApiVersion = 'v2_pull' | 'v3_push';
 

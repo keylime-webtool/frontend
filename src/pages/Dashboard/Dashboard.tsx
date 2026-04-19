@@ -49,11 +49,11 @@ const ALERT_FALLBACK_COLOR = '#bdbdbd';
 
 // Agent states used to derive attestation stats as a fallback
 const FAILED_STATES = new Set([
-  'FAILED', 'INVALID_QUOTE', 'TENANT_FAILED', 'FAIL',
+  'FAILED', 'INVALID_QUOTE', 'TENANT_FAILED', 'FAIL', 'TIMEOUT',
 ]);
 const ATTESTED_STATES = new Set([
   'GET_QUOTE', 'PROVIDE_V', 'REGISTERED', 'PASS',
-  'FAILED', 'INVALID_QUOTE', 'TENANT_FAILED', 'FAIL',
+  'FAILED', 'INVALID_QUOTE', 'TENANT_FAILED', 'FAIL', 'TIMEOUT',
 ]);
 
 export function Dashboard() {
