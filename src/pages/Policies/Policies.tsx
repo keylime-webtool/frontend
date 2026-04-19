@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -21,7 +21,17 @@ export function Policies() {
     select: (res) => res.data,
   });
 
-  const columns = [
+  const items = useMemo(() => {
+    const raw = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+    const seen = new Set<string>();
+    return raw.filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+  }, [data]);
+
+  const columns = useMemo(() => [
     { key: 'name', header: 'Name', sortable: true },
     {
       key: 'kind',
@@ -43,7 +53,7 @@ export function Policies() {
       render: (row: Policy) => <StatusBadge label={row.approval_state ?? 'unknown'} />,
     },
     { key: 'updated_date', header: 'Last Updated', sortable: true },
-  ];
+  ], []);
 
   return (
     <div>
@@ -109,7 +119,7 @@ export function Policies() {
       ) : (
         <DataTable<Policy>
           columns={columns}
-          data={Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []}
+          data={items}
           keyField="id"
         />
       )}
