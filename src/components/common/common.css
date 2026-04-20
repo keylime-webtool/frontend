@@ -12,9 +12,24 @@
 .kpi-card--danger  { border-left: 4px solid var(--color-danger); }
 .kpi-card--info    { border-left: 4px solid var(--color-primary); }
 
-.kpi-card[role="button"]:hover {
+a.kpi-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.kpi-card--interactive {
+  cursor: pointer;
+}
+
+.kpi-card--interactive:hover {
   box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,0.12));
   border-color: var(--color-primary);
+}
+
+.kpi-card--interactive:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .kpi-card__header {
