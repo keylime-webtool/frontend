@@ -157,7 +157,7 @@ export function Alerts() {
         />
         <KpiCard
           title="Info"
-          value={summary?.info ?? '--'}
+          value={summary?.info ?? alertItems.filter(a => a.severity === 'info').length}
           variant="info"
           onClick={() => { setSeverityFilter('info'); setStateFilter(''); }}
         />
