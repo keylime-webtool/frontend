@@ -146,6 +146,7 @@ export function Dashboard() {
           title="Total Agents"
           value={agents?.total_items ?? (agentItems.length || '--')}
           variant="default"
+          linkTo="/agents"
         />
         <KpiCard
           title="Attestation Success Rate"
@@ -157,12 +158,14 @@ export function Dashboard() {
                 : '--'
           }
           variant="success"
+          linkTo="/attestations"
         />
         <KpiCard
           title="Failed Attestations"
           value={attestationSummary?.total_failed ?? agentAttestation?.failedCount ?? '--'}
           variant="danger"
           subtitle={`in last ${timeRange}`}
+          linkTo="/agents?state=FAILED,INVALID_QUOTE,TENANT_FAILED,FAIL,TIMEOUT"
         />
         <KpiCard
           title="Active Alerts"
@@ -173,6 +176,7 @@ export function Dashboard() {
           }
           variant="warning"
           subtitle={`${alertSummary?.critical ?? 0} critical`}
+          linkTo="/alerts"
         />
       </div>
 

@@ -43,6 +43,7 @@ export function AgentList() {
   }, [searchParams]);
 
   const isSearchMode = search.trim().length > 0;
+  const isMultiState = stateFilter.includes(',');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['agents', page, stateFilter, modeFilter, search],
@@ -54,7 +55,7 @@ export function AgentList() {
       const res = await agentsApi.list({
         page,
         per_page: 25,
-        state: (stateFilter || undefined) as AgentListParams['state'],
+        state: (isMultiState ? undefined : stateFilter || undefined) as AgentListParams['state'],
       });
       return res.data;
     },
@@ -64,6 +65,10 @@ export function AgentList() {
   const rawItems = (data as any)?.items ?? data;
   const allItems: AgentRow[] = Array.isArray(rawItems) ? rawItems : [];
   let items = allItems;
+  if (isMultiState) {
+    const states = new Set(stateFilter.split(','));
+    items = items.filter((a) => states.has(a.state));
+  }
   if (modeFilter) items = items.filter((a) => a.attestation_mode === modeFilter);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const totalPages = (data as any)?.total_pages ?? 1;
