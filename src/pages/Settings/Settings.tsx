@@ -203,9 +203,11 @@ export function Settings() {
     },
     onError: (err: unknown) => {
       setCertSaveStatus('error');
-      const axiosErr = err as { response?: { data?: { error?: string; message?: string } } };
+      const axiosErr = err as { response?: { data?: { error?: { code?: string; message?: string } | string; message?: string } } };
+      const errField = axiosErr?.response?.data?.error;
+      const msg = typeof errField === 'object' ? errField?.message : errField;
       setCertErrorMsg(
-        axiosErr?.response?.data?.error
+        msg
         || axiosErr?.response?.data?.message
         || 'Failed to apply certificate settings',
       );
