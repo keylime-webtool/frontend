@@ -169,13 +169,9 @@ export function Dashboard() {
         />
         <KpiCard
           title="Active Alerts"
-          value={
-            alertSummary?.critical != null && alertSummary?.warnings != null
-              ? alertSummary.critical + alertSummary.warnings
-              : '--'
-          }
+          value={alertSummary?.active_alerts ?? '--'}
           variant="warning"
-          subtitle={`${alertSummary?.critical ?? 0} critical`}
+          subtitle={`${alertSummary?.active_critical ?? 0} critical`}
           linkTo="/alerts"
         />
       </div>

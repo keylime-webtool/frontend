@@ -41,4 +41,6 @@ export interface AlertSummary {
   warnings: number;
   info: number;
   resolved_24h: number;
+  active_alerts: number;
+  active_critical: number;
 }
