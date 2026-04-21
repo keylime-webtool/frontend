@@ -1,12 +1,139 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import {
+  PieChart, Pie, Cell, Legend, ResponsiveContainer,
+} from 'recharts';
 import { KpiCard } from '@/components/common/KpiCard';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { alertsApi } from '@/api/alerts';
 import { useFormatTimestamp } from '@/store/visualizationStore';
 import type { Alert } from '@/types';
+
+const SEVERITY_COLORS: Record<string, string> = {
+  critical: '#ea4335',
+  warning: '#f9ab00',
+  info: '#1a73e8',
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  attestation_failure: '#ea4335',
+  cert_expiry: '#f9ab00',
+  policy_violation: '#e8710a',
+  pcr_change: '#9334e6',
+  service_down: '#d93025',
+  rate_limit: '#4285f4',
+  clock_skew: '#00897b',
+};
+
+const STATE_COLORS: Record<string, string> = {
+  new: '#ea4335',
+  acknowledged: '#f9ab00',
+  under_investigation: '#4285f4',
+  resolved: '#34a853',
+  dismissed: '#9e9e9e',
+};
+
+const FALLBACK_COLOR = '#bdbdbd';
+
+function buildChartData(items: Alert[], key: keyof Alert): { name: string; value: number }[] {
+  const counts = new Map<string, number>();
+  for (const alert of items) {
+    const k = String(alert[key] ?? 'unknown');
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  return Array.from(counts.entries()).map(([name, value]) => ({ name, value }));
+}
+
+function AlertPieChart({
+  title,
+  data,
+  colors,
+  dimension,
+}: {
+  title: string;
+  data: { name: string; value: number }[];
+  colors: Record<string, string>;
+  dimension: string;
+}) {
+  const navigate = useNavigate();
+
+  if (data.length === 0) {
+    return (
+      <div className="section" style={{ flex: 1, minWidth: 250 }}>
+        <h2 className="section__title">{title}</h2>
+        <div className="placeholder">
+          <div className="placeholder__icon">&#x25EF;</div>
+          <div className="placeholder__text">No data</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="section" style={{ flex: 1, minWidth: 250 }}>
+      <h2 className="section__title">{title}</h2>
+      <ResponsiveContainer width="100%" height={250}>
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            outerRadius={80}
+            innerRadius={40}
+            dataKey="value"
+            nameKey="name"
+            label={({ cx, cy, midAngle, outerRadius, name, value }: {
+              cx: number; cy: number; midAngle: number; outerRadius: number;
+              name: string; value: number;
+            }) => {
+              const RADIAN = Math.PI / 180;
+              const radius = outerRadius + 16;
+              const x = cx + radius * Math.cos(-midAngle * RADIAN);
+              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+              return (
+                <text
+                  x={x} y={y}
+                  fill={colors[name] ?? FALLBACK_COLOR}
+                  textAnchor={x > cx ? 'start' : 'end'}
+                  dominantBaseline="central"
+                  fontSize={11}
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/alerts?${dimension}=${encodeURIComponent(name)}`);
+                  }}
+                >
+                  {`${name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} (${value})`}
+                </text>
+              );
+            }}
+            labelLine
+            style={{ cursor: 'pointer' }}
+            onClick={(_data, index) => {
+              const entry = data[index];
+              if (entry) {
+                navigate(`/alerts?${dimension}=${encodeURIComponent(entry.name)}`);
+              }
+            }}
+          >
+            {data.map((entry) => (
+              <Cell key={entry.name} fill={colors[entry.name] ?? FALLBACK_COLOR} />
+            ))}
+          </Pie>
+          <Legend
+            formatter={(value: string) => (
+              <span style={{ textTransform: 'capitalize', cursor: 'pointer', fontSize: 12 }}>
+                {value.replace(/_/g, ' ')}
+              </span>
+            )}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 export function Alerts() {
   const fmtTs = useFormatTimestamp();
@@ -222,6 +349,27 @@ export function Alerts() {
           keyField="id"
         />
       )}
+
+      <div className="charts-row" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '24px' }}>
+        <AlertPieChart
+          title="By Severity"
+          data={buildChartData(alertItems, 'severity')}
+          colors={SEVERITY_COLORS}
+          dimension="severity"
+        />
+        <AlertPieChart
+          title="By Type"
+          data={buildChartData(alertItems, 'type')}
+          colors={TYPE_COLORS}
+          dimension="type"
+        />
+        <AlertPieChart
+          title="By State"
+          data={buildChartData(alertItems, 'state')}
+          colors={STATE_COLORS}
+          dimension="state"
+        />
+      </div>
     </div>
   );
 }
