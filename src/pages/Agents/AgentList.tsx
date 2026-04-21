@@ -202,6 +202,7 @@ export function AgentList() {
             <option value="PASS">Pass</option>
             <option value="FAIL">Fail</option>
             <option value="PENDING">Pending</option>
+            <option value="TIMEOUT">Timeout</option>
           </optgroup>
         </select>
         <select
