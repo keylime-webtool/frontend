@@ -288,12 +288,6 @@ export function Alerts() {
           variant="info"
           onClick={() => { setSeverityFilter('info'); setStateFilter(''); }}
         />
-        <KpiCard
-          title="Resolved"
-          value={summary?.resolved_24h ?? '--'}
-          variant="success"
-          onClick={() => { setStateFilter('resolved'); setSeverityFilter(''); }}
-        />
       </div>
 
       <div className="section" style={{ display: 'flex', gap: '12px', padding: '12px 20px' }}>
