@@ -218,9 +218,9 @@ export function Dashboard() {
                 innerRadius={45}
                 dataKey="value"
                 nameKey="name"
-                label={({ cx, cy, midAngle, outerRadius, name, value }: {
-                  cx: number; cy: number; midAngle: number; outerRadius: number;
-                  name: string; value: number;
+                label={({ cx = 0, cy = 0, midAngle = 0, outerRadius = 0, name = '', value = 0 }: {
+                  cx?: number; cy?: number; midAngle?: number; outerRadius?: number;
+                  name?: string; value?: number;
                 }) => {
                   const RADIAN = Math.PI / 180;
                   const radius = outerRadius + 18;

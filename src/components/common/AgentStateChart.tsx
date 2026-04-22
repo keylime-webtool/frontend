@@ -106,9 +106,9 @@ export function AgentStateChart() {
           innerRadius={50}
           dataKey="value"
           nameKey="name"
-          label={({ cx, cy, midAngle, outerRadius, name, value, index }: {
-            cx: number; cy: number; midAngle: number; outerRadius: number;
-            name: string; value: number; index: number;
+          label={({ cx = 0, cy = 0, midAngle = 0, outerRadius = 0, name = '', value = 0, index = 0 }: {
+            cx?: number; cy?: number; midAngle?: number; outerRadius?: number;
+            name?: string; value?: number; index?: number;
           }) => {
             const RADIAN = Math.PI / 180;
             const radius = outerRadius + 20;
