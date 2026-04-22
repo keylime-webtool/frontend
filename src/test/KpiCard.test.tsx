@@ -54,4 +54,39 @@ describe('KpiCard', () => {
     const link = screen.getByRole('link');
     expect(link).toHaveClass('kpi-card--success');
   });
+
+  it('renders subtitle text', () => {
+    renderCard({ title: 'Alerts', value: 10, subtitle: '3 critical' });
+    expect(screen.getByText('3 critical')).toBeDefined();
+  });
+
+  describe('Urgent Alerts KPI card contract', () => {
+    function renderUrgentAlerts(summary: { active_alerts: number; active_critical: number }) {
+      const activeWarnings = summary.active_alerts - summary.active_critical;
+      return renderCard({
+        title: 'Urgent Alerts',
+        value: summary.active_alerts,
+        variant: 'warning',
+        subtitle: `${summary.active_critical} critical, ${activeWarnings} warnings`,
+        linkTo: '/alerts',
+      });
+    }
+
+    it('displays the correct title and link', () => {
+      renderUrgentAlerts({ active_alerts: 4, active_critical: 2 });
+      const link = screen.getByRole('link', { name: /Urgent Alerts: 4/ });
+      expect(link).toHaveAttribute('href', '/alerts');
+    });
+
+    it('shows both critical and warnings counts in subtitle', () => {
+      renderUrgentAlerts({ active_alerts: 5, active_critical: 3 });
+      expect(screen.getByText('3 critical, 2 warnings')).toBeDefined();
+    });
+
+    it('handles zero counts gracefully', () => {
+      renderUrgentAlerts({ active_alerts: 0, active_critical: 0 });
+      expect(screen.getByText('0 critical, 0 warnings')).toBeDefined();
+      expect(screen.getByText('0')).toBeDefined();
+    });
+  });
 });

@@ -168,10 +168,10 @@ export function Dashboard() {
           linkTo="/agents?state=FAILED,INVALID_QUOTE,TENANT_FAILED,FAIL,TIMEOUT"
         />
         <KpiCard
-          title="Active Alerts"
+          title="Urgent Alerts"
           value={alertSummary?.active_alerts ?? '--'}
           variant="warning"
-          subtitle={`${alertSummary?.active_critical ?? 0} critical`}
+          subtitle={`${alertSummary?.active_critical ?? 0} critical, ${alertSummary != null ? alertSummary.active_alerts - alertSummary.active_critical : 0} warnings`}
           linkTo="/alerts"
         />
       </div>
