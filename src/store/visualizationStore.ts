@@ -16,6 +16,8 @@ export type DateFormat = typeof DATE_FORMATS[number];
 
 export type TimeFormat = '24h' | '12h';
 
+export type IntegrationsViewMode = 'list' | 'topology';
+
 interface VisualizationState {
   theme: Theme;
   autoRefresh: boolean;
@@ -27,6 +29,7 @@ interface VisualizationState {
   timezoneAutoDetect: boolean;
   dateFormat: DateFormat;
   timeFormat: TimeFormat;
+  integrationsViewMode: IntegrationsViewMode;
   setTheme: (theme: Theme) => void;
   setAutoRefresh: (enabled: boolean) => void;
   setRefreshInterval: (seconds: number) => void;
@@ -37,6 +40,7 @@ interface VisualizationState {
   setTimezoneAutoDetect: (auto: boolean) => void;
   setDateFormat: (format: DateFormat) => void;
   setTimeFormat: (format: TimeFormat) => void;
+  setIntegrationsViewMode: (mode: IntegrationsViewMode) => void;
 }
 
 const STORAGE_KEY = 'visualization-settings';
@@ -62,6 +66,7 @@ function saveSettings(state: Partial<VisualizationState>) {
     timezoneAutoDetect: state.timezoneAutoDetect,
     dateFormat: state.dateFormat,
     timeFormat: state.timeFormat,
+    integrationsViewMode: state.integrationsViewMode,
   }));
 }
 
@@ -83,6 +88,8 @@ const initialDateFormat: DateFormat = (DATE_FORMATS as readonly string[]).includ
   ? (saved.dateFormat as DateFormat)
   : 'DD-MM-YYYY';
 const initialTimeFormat: TimeFormat = saved.timeFormat === '12h' ? '12h' : '24h';
+const initialIntegrationsViewMode: IntegrationsViewMode =
+  saved.integrationsViewMode === 'list' ? 'list' : 'topology';
 
 export const useVisualizationStore = create<VisualizationState>((set) => ({
   theme: initialTheme,
@@ -95,6 +102,7 @@ export const useVisualizationStore = create<VisualizationState>((set) => ({
   timezoneAutoDetect: initialAutoDetect,
   dateFormat: initialDateFormat,
   timeFormat: initialTimeFormat,
+  integrationsViewMode: initialIntegrationsViewMode,
   setTheme: (theme) => {
     applyTheme(theme);
     set((s) => { const next = { ...s, theme }; saveSettings(next); return { theme }; });
@@ -122,6 +130,8 @@ export const useVisualizationStore = create<VisualizationState>((set) => ({
     set((s) => { const next = { ...s, dateFormat }; saveSettings(next); return { dateFormat }; }),
   setTimeFormat: (timeFormat) =>
     set((s) => { const next = { ...s, timeFormat }; saveSettings(next); return { timeFormat }; }),
+  setIntegrationsViewMode: (integrationsViewMode) =>
+    set((s) => { const next = { ...s, integrationsViewMode }; saveSettings(next); return { integrationsViewMode }; }),
 }));
 
 function formatDatePart(date: Date, format: DateFormat, timezone: string): string {
