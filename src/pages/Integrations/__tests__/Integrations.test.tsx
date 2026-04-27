@@ -55,33 +55,32 @@ beforeEach(() => {
 });
 
 describe('Integrations view toggle', () => {
-  it('defaults to List View', () => {
-    renderWithProviders(<Integrations />);
-    const listBtn = screen.getByRole('button', { name: /list view/i });
-    expect(listBtn).toHaveAttribute('aria-pressed', 'true');
-  });
-
-  it('switches to Topology View when toggle is clicked', async () => {
+  it('defaults to Topology View', () => {
     renderWithProviders(<Integrations />);
     const topoBtn = screen.getByRole('button', { name: /topology view/i });
-    fireEvent.click(topoBtn);
     expect(topoBtn).toHaveAttribute('aria-pressed', 'true');
-    const listBtn = screen.getByRole('button', { name: /list view/i });
-    expect(listBtn).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('switches back to List View', () => {
+  it('switches to List View when toggle is clicked', () => {
     renderWithProviders(<Integrations />);
-    fireEvent.click(screen.getByRole('button', { name: /topology view/i }));
+    const listBtn = screen.getByRole('button', { name: /list view/i });
+    fireEvent.click(listBtn);
+    expect(listBtn).toHaveAttribute('aria-pressed', 'true');
+    const topoBtn = screen.getByRole('button', { name: /topology view/i });
+    expect(topoBtn).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('switches back to Topology View', () => {
+    renderWithProviders(<Integrations />);
     fireEvent.click(screen.getByRole('button', { name: /list view/i }));
-    expect(screen.getByRole('button', { name: /list view/i })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: /topology view/i }));
+    expect(screen.getByRole('button', { name: /topology view/i })).toHaveAttribute('aria-pressed', 'true');
   });
 });
 
 describe('TopologyView nodes', () => {
   it('renders topology nodes with correct status colors', async () => {
     renderWithProviders(<Integrations />);
-    fireEvent.click(screen.getByRole('button', { name: /topology view/i }));
 
     const diagram = await screen.findByRole('img', { name: /service topology/i });
     expect(diagram).toBeInTheDocument();
@@ -92,7 +91,6 @@ describe('TopologyView nodes', () => {
 
   it('renders service names in topology nodes', async () => {
     renderWithProviders(<Integrations />);
-    fireEvent.click(screen.getByRole('button', { name: /topology view/i }));
 
     expect(await screen.findByText('keylime-webtool-backend')).toBeInTheDocument();
   });
@@ -102,7 +100,6 @@ describe('SSH button RBAC', () => {
   it('renders SSH buttons for operator role', async () => {
     mockRole = 'operator';
     renderWithProviders(<Integrations />);
-    fireEvent.click(screen.getByRole('button', { name: /topology view/i }));
 
     const sshButtons = await screen.findAllByRole('button', { name: /ssh to/i });
     expect(sshButtons.length).toBeGreaterThanOrEqual(1);
@@ -111,7 +108,6 @@ describe('SSH button RBAC', () => {
   it('does not render SSH buttons for viewer role', async () => {
     mockRole = 'viewer';
     renderWithProviders(<Integrations />);
-    fireEvent.click(screen.getByRole('button', { name: /topology view/i }));
 
     await screen.findByRole('img', { name: /service topology/i });
     const sshButtons = screen.queryAllByRole('button', { name: /ssh to/i });
@@ -121,7 +117,6 @@ describe('SSH button RBAC', () => {
   it('SSH link points to correct host without port', async () => {
     mockRole = 'admin';
     renderWithProviders(<Integrations />);
-    fireEvent.click(screen.getByRole('button', { name: /topology view/i }));
 
     const sshLink = await screen.findByRole('button', { name: /ssh to keylime-webtool-backend/i });
     expect(sshLink).toHaveAttribute('href', 'ssh://localhost');
@@ -129,22 +124,22 @@ describe('SSH button RBAC', () => {
 });
 
 describe('View mode persistence', () => {
-  it('persists topology mode across remounts', () => {
-    const { unmount } = renderWithProviders(<Integrations />);
-    fireEvent.click(screen.getByRole('button', { name: /topology view/i }));
-    unmount();
-
-    renderWithProviders(<Integrations />);
-    expect(screen.getByRole('button', { name: /topology view/i })).toHaveAttribute('aria-pressed', 'true');
-  });
-
   it('persists list mode across remounts', () => {
     const { unmount } = renderWithProviders(<Integrations />);
-    fireEvent.click(screen.getByRole('button', { name: /topology view/i }));
     fireEvent.click(screen.getByRole('button', { name: /list view/i }));
     unmount();
 
     renderWithProviders(<Integrations />);
     expect(screen.getByRole('button', { name: /list view/i })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('persists topology mode across remounts', () => {
+    const { unmount } = renderWithProviders(<Integrations />);
+    fireEvent.click(screen.getByRole('button', { name: /list view/i }));
+    fireEvent.click(screen.getByRole('button', { name: /topology view/i }));
+    unmount();
+
+    renderWithProviders(<Integrations />);
+    expect(screen.getByRole('button', { name: /topology view/i })).toHaveAttribute('aria-pressed', 'true');
   });
 });

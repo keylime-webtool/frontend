@@ -89,7 +89,7 @@ const initialDateFormat: DateFormat = (DATE_FORMATS as readonly string[]).includ
   : 'DD-MM-YYYY';
 const initialTimeFormat: TimeFormat = saved.timeFormat === '12h' ? '12h' : '24h';
 const initialIntegrationsViewMode: IntegrationsViewMode =
-  saved.integrationsViewMode === 'topology' ? 'topology' : 'list';
+  saved.integrationsViewMode === 'list' ? 'list' : 'topology';
 
 export const useVisualizationStore = create<VisualizationState>((set) => ({
   theme: initialTheme,
