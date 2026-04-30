@@ -121,10 +121,10 @@ export function Certificates() {
                     borderRadius: 'var(--radius-sm)',
                     color: 'var(--color-text)',
                   }}
-                  formatter={(value: number, _name: string, props: { payload?: { expiry_category?: ExpiryCategory } }) => [
-                    value,
-                    EXPIRY_LABELS[props.payload?.expiry_category as ExpiryCategory] ?? props.payload?.expiry_category ?? '',
-                  ]}
+                  formatter={(value, _name, item) => {
+                    const cat = (item.payload as Record<string, unknown>)?.expiry_category as ExpiryCategory | undefined;
+                    return [String(value), EXPIRY_LABELS[cat!] ?? cat ?? ''];
+                  }}
                 />
                 <Bar dataKey="count" name="Certificates" radius={[2, 2, 0, 0]}>
                   {timelineData.map((entry, index) => (
