@@ -29,6 +29,11 @@ const VARIANT_MAP: Record<string, BadgeVariant> = {
   // Push-mode agent states
   pending: 'warning',
   timeout: 'danger',
+  // Certificate expiry categories
+  warning_90d: 'info',
+  warning_30d: 'warning',
+  critical_7d: 'danger',
+  critical_1d: 'danger',
   // Generic
   pass: 'success',
   fail: 'danger',

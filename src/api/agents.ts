@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { Agent, AgentListParams, ImaLogEntry, BootLogEntry, PaginatedResponse } from '@/types';
+import type { Agent, AgentListParams, Certificate, ImaLogEntry, BootLogEntry, PaginatedResponse } from '@/types';
 import type { AttestationTimelinePoint } from '@/types';
 
 export const agentsApi = {
@@ -36,7 +36,7 @@ export const agentsApi = {
   },
 
   certificates(agentId: string) {
-    return apiClient.get(`/agents/${agentId}/certificates`);
+    return apiClient.get<Certificate[]>(`/agents/${agentId}/certificates`);
   },
 
   raw(agentId: string, source?: 'backend' | 'registrar' | 'verifier') {
