@@ -6,6 +6,7 @@ import { AgentDetailPage } from '@/pages/Agents/AgentDetail';
 import { Attestations } from '@/pages/Attestations/Attestations';
 import { Policies } from '@/pages/Policies/Policies';
 import { Certificates } from '@/pages/Certificates/Certificates';
+import { CertificateDetail } from '@/pages/Certificates/CertificateDetail';
 import { Alerts } from '@/pages/Alerts/Alerts';
 import { Performance } from '@/pages/Performance/Performance';
 import { AuditLog } from '@/pages/AuditLog/AuditLog';
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { path: 'attestations', element: <Attestations /> },
       { path: 'policies', element: <Policies /> },
       { path: 'certificates', element: <Certificates /> },
+      { path: 'certificates/:id', element: <CertificateDetail /> },
       { path: 'alerts', element: <Alerts /> },
       { path: 'performance', element: <Performance /> },
       { path: 'audit', element: <AuditLog /> },

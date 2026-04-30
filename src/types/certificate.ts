@@ -1,10 +1,6 @@
-export type CertificateType =
-  | 'ek'
-  | 'ak'
-  | 'iak'
-  | 'idevid'
-  | 'mtls'
-  | 'server_cert';
+export type CertificateType = 'ek' | 'ak' | 'mtls';
+
+export type CertificateStatus = 'valid' | 'expiring_soon' | 'critical' | 'expired';
 
 export type ExpiryCategory =
   | 'valid'
@@ -30,15 +26,26 @@ export interface Certificate {
   san: string[];
   key_usage: string[];
   extended_key_usage: string[];
-  associated_entity: string;
-  chain: Certificate[];
-  validation_status: ValidationStatus;
+  status: CertificateStatus;
   expiry_category: ExpiryCategory;
+  associated_entity: string;
+  validation_status: ValidationStatus;
+  chain_valid: boolean | null;
+  chain: Certificate[];
+  raw_pem?: string;
 }
 
 export interface CertificateExpirySummary {
   expired: number;
   expiring_30d: number;
+  expiring_90d: number;
   valid: number;
   total: number;
+  timeline_90d: CertificateTimelineEntry[];
+}
+
+export interface CertificateTimelineEntry {
+  date: string;
+  count: number;
+  expiry_category: ExpiryCategory;
 }

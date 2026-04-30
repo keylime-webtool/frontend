@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { useFormatTimestamp } from '@/store/visualizationStore';
 import { agentsApi } from '@/api/agents';
+import type { Certificate, CertificateType } from '@/types';
 
 interface AgentDetail {
   id: string;
@@ -347,24 +348,99 @@ function BootLogTab({ agentId }: { agentId: string }) {
   );
 }
 
+const CERT_TYPE_LABELS: Record<CertificateType, string> = {
+  ek: 'EK Certificate',
+  ak: 'AK Certificate',
+  mtls: 'mTLS Certificate',
+};
+
+const CERT_DISPLAY_ORDER: CertificateType[] = ['ek', 'ak', 'mtls'];
+
+function daysRemaining(notAfter: string): number {
+  const diff = new Date(notAfter).getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
+function countdownClass(days: number): string {
+  if (days <= 1) return 'cert-card__countdown--danger';
+  if (days <= 7) return 'cert-card__countdown--critical';
+  if (days <= 30) return 'cert-card__countdown--warning';
+  return 'cert-card__countdown--ok';
+}
+
 function CertsTab({ agentId }: { agentId: string }) {
+  const fmtTs = useFormatTimestamp();
+
   const { data } = useQuery({
     queryKey: ['agent', agentId, 'certs'],
     queryFn: () => agentsApi.certificates(agentId),
     select: (res) => res.data,
   });
 
-  void data;
+  const certs: Certificate[] = Array.isArray(data) ? (data as Certificate[]) : [];
+
+  const grouped = certs.reduce<Record<string, Certificate[]>>((acc, cert) => {
+    (acc[cert.type] ??= []).push(cert);
+    return acc;
+  }, {});
+
+  if (certs.length === 0) {
+    return (
+      <div>
+        <h3 className="section__title">Certificates</h3>
+        <div className="placeholder">
+          <div className="placeholder__icon">&#x1F512;</div>
+          <div className="placeholder__text">No certificates found</div>
+          <div className="placeholder__subtext">
+            EK, AK, and mTLS certificates will appear here when available.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <h3 className="section__title">Certificates</h3>
-      <div className="placeholder">
-        <div className="placeholder__icon">&#x1F512;</div>
-        <div className="placeholder__text">Agent certificates</div>
-        <div className="placeholder__subtext">
-          EK, AK, IAK, IDevID, and mTLS certificates with expiry countdowns.
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+        {CERT_DISPLAY_ORDER.map((type) => {
+          const typeCerts = grouped[type];
+          if (!typeCerts?.length) return null;
+          return typeCerts.map((cert) => {
+            const days = daysRemaining(cert.not_after);
+            return (
+              <Link
+                key={cert.id}
+                to={`/certificates/${cert.id}`}
+                className="cert-card"
+                style={{ textDecoration: 'none', color: 'inherit' }}
+                aria-label={`${CERT_TYPE_LABELS[type]} - ${days} days remaining`}
+              >
+                <div className="cert-card__header">
+                  <StatusBadge label={cert.type.toUpperCase()} variant="info" />
+                  <StatusBadge label={cert.expiry_category} />
+                </div>
+                <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text)', marginBottom: '4px' }}>
+                  {CERT_TYPE_LABELS[type]}
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontFamily: 'monospace', marginBottom: '4px' }}>
+                  {cert.subject_dn}
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>
+                  Issuer: {cert.issuer_dn}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                    Expires: {fmtTs(cert.not_after)}
+                  </span>
+                  <span className={`cert-card__countdown ${countdownClass(days)}`}>
+                    {days === 0 ? 'Expired' : `${days}d remaining`}
+                  </span>
+                </div>
+              </Link>
+            );
+          });
+        })}
       </div>
     </div>
   );

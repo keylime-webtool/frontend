@@ -1,8 +1,8 @@
 import apiClient from './client';
-import type { Certificate, CertificateExpirySummary, PaginatedResponse } from '@/types';
+import type { Certificate, CertificateExpirySummary, CertificateTimelineEntry, CertificateType, ExpiryCategory, PaginatedResponse } from '@/types';
 
 export const certificatesApi = {
-  list(params?: { type?: string; expiry_category?: string }) {
+  list(params?: { type?: CertificateType; expiry_category?: ExpiryCategory }) {
     return apiClient.get<PaginatedResponse<Certificate>>('/certificates', { params });
   },
 
@@ -14,15 +14,19 @@ export const certificatesApi = {
     return apiClient.get<Certificate>(`/certificates/${certId}`);
   },
 
-  renew(certId: string) {
-    return apiClient.post(`/certificates/${certId}/renew`);
-  },
-
-  batchRenew(certIds: string[]) {
-    return apiClient.post('/certificates/batch-renew', { cert_ids: certIds });
-  },
-
   timeline() {
-    return apiClient.get('/certificates/timeline');
+    return apiClient.get<CertificateTimelineEntry[]>('/certificates/timeline');
+  },
+
+  downloadPem(certId: string) {
+    return apiClient.get<Blob>(`/certificates/${certId}/download/pem`, {
+      responseType: 'blob',
+    });
+  },
+
+  downloadDer(certId: string) {
+    return apiClient.get<Blob>(`/certificates/${certId}/download/der`, {
+      responseType: 'blob',
+    });
   },
 };
