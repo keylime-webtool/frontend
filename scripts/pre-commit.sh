@@ -12,6 +12,10 @@
 # To install as a git pre-commit hook:
 #   ln -sf ../../scripts/pre-commit.sh .git/hooks/pre-commit
 
+# ── Resolve repo root ────────────────────────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.." || exit 1
+
 # ── Colours (disabled when stdout is not a terminal) ──────────────────
 if [ -t 1 ]; then
     RED='\033[0;31m'
@@ -64,7 +68,16 @@ echo ""
 
 run_step "Type Check" npx tsc -b
 run_step "Lint" npm run --silent lint
-run_step "Test" npx vitest --run
+printf "  %-20s" "Test + Coverage"
+rm -rf coverage/
+if npx vitest --run --coverage &> /dev/null; then
+    cov_pct=$(node -e "const s=require('./coverage/coverage-summary.json');console.log(s.total.statements.pct+'%')" 2>/dev/null)
+    echo -e "${GREEN}OK${RESET} (${cov_pct:-?} coverage)"
+    ((passed++))
+else
+    echo -e "${RED}FAIL${RESET}"
+    ((failed++))
+fi
 run_step "Build" npm run --silent build
 
 # ── Security audit (npm-audit.yml) ───────────────────────────────────
