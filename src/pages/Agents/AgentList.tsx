@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
@@ -27,20 +27,10 @@ export function AgentList() {
   const fmtTs = useFormatTimestamp();
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
-  const [stateFilter, setStateFilter] = useState<string>(searchParams.get('state') ?? '');
-  const [modeFilter, setModeFilter] = useState<string>(searchParams.get('mode') ?? '');
-  const [search, setSearch] = useState(searchParams.get('q') ?? '');
 
-  // Sync search and state filter when URL query params change
-  useEffect(() => {
-    const q = searchParams.get('q') ?? '';
-    const state = searchParams.get('state') ?? '';
-    const mode = searchParams.get('mode') ?? '';
-    setSearch(q);
-    setStateFilter(state);
-    setModeFilter(mode);
-    setPage(1);
-  }, [searchParams]);
+  const search = useMemo(() => searchParams.get('q') ?? '', [searchParams]);
+  const stateFilter = useMemo(() => searchParams.get('state') ?? '', [searchParams]);
+  const modeFilter = useMemo(() => searchParams.get('mode') ?? '', [searchParams]);
 
   const isSearchMode = search.trim().length > 0;
   const isMultiState = stateFilter.includes(',');
@@ -117,9 +107,6 @@ export function AgentList() {
         </div>
         <button
           onClick={() => {
-            setSearch('');
-            setStateFilter('');
-            setModeFilter('');
             setPage(1);
             setSearchParams({});
           }}
@@ -144,7 +131,6 @@ export function AgentList() {
           placeholder="Search by UUID, hostname, or IP..."
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value);
             setPage(1);
             if (e.target.value) {
               setSearchParams({ q: e.target.value });
@@ -167,7 +153,6 @@ export function AgentList() {
           value={stateFilter}
           onChange={(e) => {
             const val = e.target.value;
-            setStateFilter(val);
             setPage(1);
             const next = new URLSearchParams(searchParams);
             if (val) {
@@ -209,7 +194,6 @@ export function AgentList() {
           value={modeFilter}
           onChange={(e) => {
             const val = e.target.value;
-            setModeFilter(val);
             setPage(1);
             const next = new URLSearchParams(searchParams);
             if (val) {

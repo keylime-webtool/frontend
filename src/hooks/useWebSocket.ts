@@ -12,9 +12,13 @@ export function useWebSocket({ channel, onMessage, enabled = true }: UseWebSocke
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const retryCountRef = useRef(0);
+  const connectRef = useRef<() => void>();
   const [connected, setConnected] = useState(false);
 
-  const connect = useCallback(() => {
+  const onMessageRef = useRef(onMessage);
+  onMessageRef.current = onMessage;
+
+  connectRef.current = useCallback(() => {
     if (!enabled) return;
 
     const token = sessionStorage.getItem('access_token');
@@ -31,9 +35,9 @@ export function useWebSocket({ channel, onMessage, enabled = true }: UseWebSocke
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        onMessage(data);
+        onMessageRef.current(data);
       } catch {
-        onMessage(event.data);
+        onMessageRef.current(event.data);
       }
     };
 
@@ -41,21 +45,21 @@ export function useWebSocket({ channel, onMessage, enabled = true }: UseWebSocke
       setConnected(false);
       const delay = Math.min(1000 * 2 ** retryCountRef.current, 30000);
       retryCountRef.current += 1;
-      reconnectTimeoutRef.current = setTimeout(connect, delay);
+      reconnectTimeoutRef.current = setTimeout(() => connectRef.current?.(), delay);
     };
 
     ws.onerror = () => {
       ws.close();
     };
-  }, [channel, onMessage, enabled]);
+  }, [channel, enabled]);
 
   useEffect(() => {
-    connect();
+    connectRef.current?.();
     return () => {
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       wsRef.current?.close();
     };
-  }, [connect]);
+  }, [channel, enabled]);
 
   return { connected };
 }
