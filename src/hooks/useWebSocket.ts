@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || `ws://${window.location.host}/ws`;
 
@@ -12,49 +12,51 @@ export function useWebSocket({ channel, onMessage, enabled = true }: UseWebSocke
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const retryCountRef = useRef(0);
-  const connectRef = useRef<() => void>();
+  const onMessageRef = useRef(onMessage);
   const [connected, setConnected] = useState(false);
 
-  const onMessageRef = useRef(onMessage);
-  onMessageRef.current = onMessage;
-
-  connectRef.current = useCallback(() => {
-    if (!enabled) return;
-
-    const token = sessionStorage.getItem('access_token');
-    const url = `${WS_BASE_URL}/${channel}${token ? `?token=${token}` : ''}`;
-
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      setConnected(true);
-      retryCountRef.current = 0;
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        onMessageRef.current(data);
-      } catch {
-        onMessageRef.current(event.data);
-      }
-    };
-
-    ws.onclose = () => {
-      setConnected(false);
-      const delay = Math.min(1000 * 2 ** retryCountRef.current, 30000);
-      retryCountRef.current += 1;
-      reconnectTimeoutRef.current = setTimeout(() => connectRef.current?.(), delay);
-    };
-
-    ws.onerror = () => {
-      ws.close();
-    };
-  }, [channel, enabled]);
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
 
   useEffect(() => {
-    connectRef.current?.();
+    if (!enabled) return;
+
+    function connect() {
+      const token = sessionStorage.getItem('access_token');
+      const url = `${WS_BASE_URL}/${channel}${token ? `?token=${token}` : ''}`;
+
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        setConnected(true);
+        retryCountRef.current = 0;
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          onMessageRef.current(data);
+        } catch {
+          onMessageRef.current(event.data);
+        }
+      };
+
+      ws.onclose = () => {
+        setConnected(false);
+        const delay = Math.min(1000 * 2 ** retryCountRef.current, 30000);
+        retryCountRef.current += 1;
+        reconnectTimeoutRef.current = setTimeout(connect, delay);
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+    }
+
+    connect();
+
     return () => {
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       wsRef.current?.close();
