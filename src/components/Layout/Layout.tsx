@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { useVisualizationStore } from '@/store/visualizationStore';
 import './Layout.css';
 
 const MIN_SIDEBAR = 180;
@@ -9,7 +10,8 @@ const MAX_SIDEBAR = 400;
 const DEFAULT_SIDEBAR = 240;
 
 export function Layout() {
-  const [timeRange, setTimeRange] = useState('24h');
+  const timeRange = useVisualizationStore((s) => s.defaultTimeRange);
+  const setTimeRange = useVisualizationStore((s) => s.setDefaultTimeRange);
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const dragging = useRef(false);

@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from '../Layout';
+import { useVisualizationStore } from '@/store/visualizationStore';
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
@@ -49,6 +50,10 @@ function renderLayout() {
   );
 }
 
+beforeEach(() => {
+  useVisualizationStore.setState({ defaultTimeRange: '24h' });
+});
+
 describe('Layout', () => {
   it('renders sidebar and topbar', () => {
     renderLayout();
@@ -81,6 +86,19 @@ describe('Layout', () => {
     fireEvent.click(toggle);
     const layout = document.querySelector('.layout');
     expect(layout?.classList.contains('layout--sidebar-collapsed')).toBe(false);
+  });
+
+  it('uses defaultTimeRange from visualization store', () => {
+    useVisualizationStore.setState({ defaultTimeRange: '7d' });
+    renderLayout();
+    const btn = screen.getByText('7d');
+    expect(btn.classList.contains('topbar__time-btn--active')).toBe(true);
+  });
+
+  it('updates store when time range button is clicked', () => {
+    renderLayout();
+    fireEvent.click(screen.getByText('1h'));
+    expect(useVisualizationStore.getState().defaultTimeRange).toBe('1h');
   });
 
   describe('sidebar drag resize', () => {
