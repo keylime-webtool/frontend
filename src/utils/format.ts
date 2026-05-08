@@ -31,7 +31,8 @@ export function formatTimestamp(
   const date = value instanceof Date ? value : new Date(value);
   if (isNaN(date.getTime())) return String(value);
   if (options) {
-    return date.toLocaleString(undefined, { timeZone: timezone, ...options });
+    const hour12 = (timeFormat ?? '24h') === '12h';
+    return date.toLocaleString(undefined, { timeZone: timezone, hour12, ...options });
   }
   const datePart = formatDatePart(date, dateFormat ?? 'DD-MM-YYYY', timezone);
   const hour12 = (timeFormat ?? '24h') === '12h';
