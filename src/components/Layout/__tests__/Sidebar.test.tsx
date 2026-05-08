@@ -49,4 +49,43 @@ describe('Sidebar', () => {
     renderSidebar();
     expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument();
   });
+
+  it('does not show alert indicator when all services are up', () => {
+    renderSidebar();
+    expect(screen.queryByLabelText('Service down')).not.toBeInTheDocument();
+  });
+
+  it('shows alert indicator when backend is down', async () => {
+    const { settingsApi } = await import('@/api/settings');
+    vi.mocked(settingsApi.getKeylime).mockRejectedValue(new Error('Network error'));
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter>
+          <Sidebar />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByLabelText('Service down')).toBeInTheDocument();
+    vi.mocked(settingsApi.getKeylime).mockResolvedValue({ data: {} } as never);
+  });
+
+  it('shows alert indicator when a service is down', async () => {
+    const { performanceApi } = await import('@/api/performance');
+    vi.mocked(performanceApi.integrations).mockResolvedValue({
+      data: [
+        { name: 'Verifier', endpoint: 'https://v:3000', status: 'down', latency_ms: 0 },
+      ],
+    } as never);
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter>
+          <Sidebar />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByLabelText('Service down')).toBeInTheDocument();
+    vi.mocked(performanceApi.integrations).mockResolvedValue({ data: [] } as never);
+  });
 });

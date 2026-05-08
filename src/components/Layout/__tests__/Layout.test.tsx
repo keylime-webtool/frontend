@@ -23,6 +23,19 @@ vi.mock('@/api/alerts', () => ({
   alertsApi: { summary: vi.fn().mockResolvedValue({ data: {} }) },
 }));
 
+vi.mock('@/api/performance', () => ({
+  performanceApi: { integrations: vi.fn().mockResolvedValue({ data: [] }) },
+}));
+
+vi.mock('@/api/settings', () => ({
+  settingsApi: { getKeylime: vi.fn().mockResolvedValue({ data: {} }) },
+}));
+
+vi.mock('@/api/client', () => ({
+  default: { get: vi.fn() },
+  getBackendUrl: () => 'http://localhost:8080',
+}));
+
 function renderLayout() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -68,5 +81,65 @@ describe('Layout', () => {
     fireEvent.click(toggle);
     const layout = document.querySelector('.layout');
     expect(layout?.classList.contains('layout--sidebar-collapsed')).toBe(false);
+  });
+
+  describe('sidebar drag resize', () => {
+    it('sets cursor on mousedown', () => {
+      renderLayout();
+      const handle = document.querySelector('.layout__resize-handle')!;
+      fireEvent.mouseDown(handle);
+      expect(document.body.style.cursor).toBe('col-resize');
+      expect(document.body.style.userSelect).toBe('none');
+    });
+
+    it('updates sidebar width on mousemove after mousedown', () => {
+      renderLayout();
+      const handle = document.querySelector('.layout__resize-handle')!;
+      fireEvent.mouseDown(handle);
+      fireEvent.mouseMove(document, { clientX: 300 });
+      const layout = document.querySelector('.layout') as HTMLElement;
+      expect(layout.style.getPropertyValue('--sidebar-width')).toBe('300px');
+    });
+
+    it('does not update sidebar on mousemove without mousedown', () => {
+      renderLayout();
+      const layout = document.querySelector('.layout') as HTMLElement;
+      const initialWidth = layout.style.getPropertyValue('--sidebar-width');
+      fireEvent.mouseMove(document, { clientX: 300 });
+      expect(layout.style.getPropertyValue('--sidebar-width')).toBe(initialWidth);
+    });
+
+    it('resets cursor on mouseup', () => {
+      renderLayout();
+      const handle = document.querySelector('.layout__resize-handle')!;
+      fireEvent.mouseDown(handle);
+      fireEvent.mouseUp(document);
+      expect(document.body.style.cursor).toBe('');
+      expect(document.body.style.userSelect).toBe('');
+    });
+
+    it('clamps width to MIN_SIDEBAR (180)', () => {
+      renderLayout();
+      const handle = document.querySelector('.layout__resize-handle')!;
+      fireEvent.mouseDown(handle);
+      fireEvent.mouseMove(document, { clientX: 50 });
+      const layout = document.querySelector('.layout') as HTMLElement;
+      expect(layout.style.getPropertyValue('--sidebar-width')).toBe('180px');
+    });
+
+    it('clamps width to MAX_SIDEBAR (400)', () => {
+      renderLayout();
+      const handle = document.querySelector('.layout__resize-handle')!;
+      fireEvent.mouseDown(handle);
+      fireEvent.mouseMove(document, { clientX: 800 });
+      const layout = document.querySelector('.layout') as HTMLElement;
+      expect(layout.style.getPropertyValue('--sidebar-width')).toBe('400px');
+    });
+
+    it('hides resize handle when sidebar is collapsed', () => {
+      renderLayout();
+      fireEvent.click(screen.getByLabelText(/toggle sidebar/i));
+      expect(document.querySelector('.layout__resize-handle')).toBeNull();
+    });
   });
 });

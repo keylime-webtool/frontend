@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { TopBar } from '../TopBar';
 import { useAuthStore } from '@/store/authStore';
+import { useVisualizationStore } from '@/store/visualizationStore';
 import type { User } from '@/types';
 
 const mockNavigate = vi.fn();
@@ -84,5 +85,26 @@ describe('TopBar', () => {
     renderTopBar();
     fireEvent.click(screen.getByLabelText('Settings'));
     expect(mockNavigate).toHaveBeenCalledWith('/settings');
+  });
+
+  it('toggles theme from light to dark', () => {
+    useVisualizationStore.setState({ theme: 'light' });
+    renderTopBar();
+    fireEvent.click(screen.getByLabelText('Switch to dark theme'));
+    expect(useVisualizationStore.getState().theme).toBe('dark');
+  });
+
+  it('toggles theme from dark to light', () => {
+    useVisualizationStore.setState({ theme: 'dark' });
+    renderTopBar();
+    fireEvent.click(screen.getByLabelText('Switch to light theme'));
+    expect(useVisualizationStore.getState().theme).toBe('light');
+  });
+
+  it('does not navigate on empty search submit', () => {
+    renderTopBar();
+    const form = screen.getByLabelText('Search agents').closest('form')!;
+    fireEvent.submit(form);
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });
