@@ -88,18 +88,17 @@ describe('Layout', () => {
     expect(layout?.classList.contains('layout--sidebar-collapsed')).toBe(false);
   });
 
-  it('initializes time range from visualization store defaultTimeRange', () => {
+  it('uses defaultTimeRange from visualization store', () => {
     useVisualizationStore.setState({ defaultTimeRange: '7d' });
     renderLayout();
     const btn = screen.getByText('7d');
     expect(btn.classList.contains('topbar__time-btn--active')).toBe(true);
   });
 
-  it('uses updated defaultTimeRange on remount', () => {
-    useVisualizationStore.setState({ defaultTimeRange: '1h' });
+  it('updates store when time range button is clicked', () => {
     renderLayout();
-    const btn1h = screen.getByText('1h');
-    expect(btn1h.classList.contains('topbar__time-btn--active')).toBe(true);
+    fireEvent.click(screen.getByText('1h'));
+    expect(useVisualizationStore.getState().defaultTimeRange).toBe('1h');
   });
 
   describe('sidebar drag resize', () => {

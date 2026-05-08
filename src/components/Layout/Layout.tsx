@@ -10,12 +10,8 @@ const MAX_SIDEBAR = 400;
 const DEFAULT_SIDEBAR = 240;
 
 export function Layout() {
-  const defaultTimeRange = useVisualizationStore((s) => s.defaultTimeRange);
-  const [timeRange, setTimeRange] = useState(defaultTimeRange);
-
-  useEffect(() => {
-    setTimeRange(defaultTimeRange);
-  }, [defaultTimeRange]);
+  const timeRange = useVisualizationStore((s) => s.defaultTimeRange);
+  const setTimeRange = useVisualizationStore((s) => s.setDefaultTimeRange);
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const dragging = useRef(false);
