@@ -9,6 +9,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFormatTimestamp } from '@/store/visualizationStore';
 import type { AgentListParams } from '@/types';
 
+interface PaginatedAgentData {
+  items: AgentRow[];
+  total_pages: number;
+}
+
+function isPaginated(data: unknown): data is PaginatedAgentData {
+  return data != null && typeof data === 'object' && 'items' in data;
+}
 
 interface AgentRow {
   id: string;
@@ -51,17 +59,15 @@ export function AgentList() {
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rawItems = (data as any)?.items ?? data;
-  const allItems: AgentRow[] = Array.isArray(rawItems) ? rawItems : [];
+  const rawItems: unknown = isPaginated(data) ? data.items : data;
+  const allItems: AgentRow[] = Array.isArray(rawItems) ? (rawItems as AgentRow[]) : [];
   let items = allItems;
   if (isMultiState) {
     const states = new Set(stateFilter.split(','));
     items = items.filter((a) => states.has(a.state));
   }
   if (modeFilter) items = items.filter((a) => a.attestation_mode === modeFilter);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const totalPages = (data as any)?.total_pages ?? 1;
+  const totalPages = isPaginated(data) ? data.total_pages : 1;
 
   const columns = [
     {

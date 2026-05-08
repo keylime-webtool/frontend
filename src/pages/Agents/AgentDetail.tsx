@@ -265,8 +265,7 @@ function ImaTab({ agentId }: { agentId: string }) {
     select: (res) => res.data,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const entries = (data as any)?.entries ?? [];
+  const entries = data?.entries ?? [];
 
   return (
     <div>
@@ -283,7 +282,7 @@ function ImaTab({ agentId }: { agentId: string }) {
               </tr>
             </thead>
             <tbody>
-              {entries.map((entry: { pcr: number; template_name: string; filename: string; filedata_hash: string }, i: number) => (
+              {entries.map((entry, i) => (
                 <tr key={i} className="data-table__row">
                   <td className="data-table__td">{entry.pcr}</td>
                   <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{entry.template_name}</td>
@@ -310,8 +309,7 @@ function BootLogTab({ agentId }: { agentId: string }) {
     select: (res) => res.data,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const entries = (data as any)?.entries ?? [];
+  const entries = data?.entries ?? [];
 
   return (
     <div>
@@ -328,7 +326,7 @@ function BootLogTab({ agentId }: { agentId: string }) {
               </tr>
             </thead>
             <tbody>
-              {entries.map((entry: { pcr: number; event_type: string; event_data: string; digest: string }, i: number) => (
+              {entries.map((entry, i) => (
                 <tr key={i} className="data-table__row">
                   <td className="data-table__td">{entry.pcr}</td>
                   <td className="data-table__td" style={{ fontFamily: 'monospace', fontSize: '12px' }}>{entry.event_type}</td>

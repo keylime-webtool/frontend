@@ -1,4 +1,6 @@
-export type AuditSeverity = 'critical' | 'warning' | 'info';
+import type { Severity } from './severity';
+
+export type AuditSeverity = Severity;
 
 export type AuditAction =
   | 'create_agent'
