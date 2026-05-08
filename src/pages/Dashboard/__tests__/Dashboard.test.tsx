@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Dashboard } from '../Dashboard';
@@ -103,5 +103,62 @@ describe('Dashboard', () => {
     expect(screen.getByText('severity')).toBeInTheDocument();
     expect(screen.getByText('type')).toBeInTheDocument();
     expect(screen.getByText('state')).toBeInTheDocument();
+  });
+
+  it('switches alert chart dimension on button click', async () => {
+    renderDashboard();
+    await screen.findByText('Total Agents');
+    const typeBtn = screen.getByText('type');
+    fireEvent.click(typeBtn);
+    expect(typeBtn).toHaveStyle({ fontWeight: '600' });
+    const sevBtn = screen.getByText('severity');
+    expect(sevBtn).toHaveStyle({ fontWeight: '400' });
+  });
+
+  it('renders attestation timeline placeholder when no data', async () => {
+    renderDashboard();
+    expect(await screen.findByText('No attestation timeline data')).toBeInTheDocument();
+  });
+
+  it('shows no alert data placeholder when alerts are empty', async () => {
+    const { alertsApi } = await import('@/api/alerts');
+    vi.mocked(alertsApi.list).mockResolvedValueOnce({
+      data: { items: [] },
+    } as never);
+    renderDashboard();
+    expect(await screen.findByText('No alert data to display')).toBeInTheDocument();
+  });
+
+  it('renders 100.0% when all agents are passing', async () => {
+    const { agentsApi } = await import('@/api/agents');
+    vi.mocked(agentsApi.list).mockResolvedValueOnce({
+      data: {
+        items: [
+          { id: 'a1', state: 'PASS', attestation_mode: 'Pull' },
+          { id: 'a2', state: 'GET_QUOTE', attestation_mode: 'Push' },
+        ],
+        total_items: 2,
+      },
+    } as never);
+    renderDashboard();
+    expect(await screen.findByText('100.0%')).toBeInTheDocument();
+  });
+
+  it('uses attestation summary when available', async () => {
+    const { attestationsApi } = await import('@/api/attestations');
+    vi.mocked(attestationsApi.summary).mockResolvedValueOnce({
+      data: { success_rate: 95.55, total_failed: 4, total_attested: 89 },
+    } as never);
+    renderDashboard();
+    expect(await screen.findByText('95.55%')).toBeInTheDocument();
+  });
+
+  it('renders failed attestation count from summary', async () => {
+    const { attestationsApi } = await import('@/api/attestations');
+    vi.mocked(attestationsApi.summary).mockResolvedValueOnce({
+      data: { success_rate: 90, total_failed: 7, total_attested: 70 },
+    } as never);
+    renderDashboard();
+    expect(await screen.findByText('7')).toBeInTheDocument();
   });
 });
