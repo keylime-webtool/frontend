@@ -10,32 +10,10 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { alertsApi } from '@/api/alerts';
 import { useFormatTimestamp } from '@/store/visualizationStore';
 import type { Alert } from '@/types';
-
-const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ea4335',
-  warning: '#f9ab00',
-  info: '#1a73e8',
-};
-
-const TYPE_COLORS: Record<string, string> = {
-  attestation_failure: '#ea4335',
-  cert_expiry: '#f9ab00',
-  policy_violation: '#e8710a',
-  pcr_change: '#9334e6',
-  service_down: '#d93025',
-  rate_limit: '#4285f4',
-  clock_skew: '#00897b',
-};
-
-const STATE_COLORS: Record<string, string> = {
-  new: '#ea4335',
-  acknowledged: '#f9ab00',
-  under_investigation: '#4285f4',
-  resolved: '#34a853',
-  dismissed: '#9e9e9e',
-};
-
-const FALLBACK_COLOR = '#bdbdbd';
+import {
+  ALERT_SEVERITY_COLORS, ALERT_TYPE_COLORS, ALERT_STATE_COLORS, ALERT_FALLBACK_COLOR,
+} from '@/constants/colors';
+import { createPieLabelRenderer } from '@/utils/pieLabel';
 
 function buildChartData(items: Alert[], key: keyof Alert): { name: string; value: number }[] {
   const counts = new Map<string, number>();
@@ -84,31 +62,13 @@ function AlertPieChart({
             innerRadius={40}
             dataKey="value"
             nameKey="name"
-            label={({ cx = 0, cy = 0, midAngle = 0, outerRadius = 0, name = '', value = 0 }: {
-              cx?: number; cy?: number; midAngle?: number; outerRadius?: number;
-              name?: string; value?: number;
-            }) => {
-              const RADIAN = Math.PI / 180;
-              const radius = outerRadius + 16;
-              const x = cx + radius * Math.cos(-midAngle * RADIAN);
-              const y = cy + radius * Math.sin(-midAngle * RADIAN);
-              return (
-                <text
-                  x={x} y={y}
-                  fill={colors[name] ?? FALLBACK_COLOR}
-                  textAnchor={x > cx ? 'start' : 'end'}
-                  dominantBaseline="central"
-                  fontSize={11}
-                  style={{ cursor: 'pointer' }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/alerts?${dimension}=${encodeURIComponent(name)}`);
-                  }}
-                >
-                  {`${name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} (${value})`}
-                </text>
-              );
-            }}
+            label={createPieLabelRenderer({
+              colors,
+              fallbackColor: ALERT_FALLBACK_COLOR,
+              offset: 16,
+              fontSize: 11,
+              onClick: (name) => navigate(`/alerts?${dimension}=${encodeURIComponent(name)}`),
+            })}
             labelLine
             style={{ cursor: 'pointer' }}
             onClick={(_data, index) => {
@@ -119,7 +79,7 @@ function AlertPieChart({
             }}
           >
             {data.map((entry) => (
-              <Cell key={entry.name} fill={colors[entry.name] ?? FALLBACK_COLOR} />
+              <Cell key={entry.name} fill={colors[entry.name] ?? ALERT_FALLBACK_COLOR} />
             ))}
           </Pie>
           <Legend
@@ -354,19 +314,19 @@ export function Alerts() {
         <AlertPieChart
           title="By Severity"
           data={buildChartData(alertItems, 'severity')}
-          colors={SEVERITY_COLORS}
+          colors={ALERT_SEVERITY_COLORS}
           dimension="severity"
         />
         <AlertPieChart
           title="By Type"
           data={buildChartData(alertItems, 'type')}
-          colors={TYPE_COLORS}
+          colors={ALERT_TYPE_COLORS}
           dimension="type"
         />
         <AlertPieChart
           title="By State"
           data={buildChartData(alertItems, 'state')}
-          colors={STATE_COLORS}
+          colors={ALERT_STATE_COLORS}
           dimension="state"
         />
       </div>

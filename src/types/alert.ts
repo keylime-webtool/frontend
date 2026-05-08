@@ -1,4 +1,6 @@
-export type AlertSeverity = 'critical' | 'warning' | 'info';
+import type { Severity } from './severity';
+
+export type AlertSeverity = Severity;
 
 export type AlertState =
   | 'new'

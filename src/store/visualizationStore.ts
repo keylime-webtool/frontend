@@ -78,6 +78,20 @@ function applyTheme(theme: Theme) {
   document.documentElement.setAttribute('data-theme', theme);
 }
 
+type SettableKey = Exclude<keyof VisualizationState, `set${string}`>;
+
+function createPersistedSetter<K extends SettableKey>(
+  key: K,
+  set: (fn: (s: VisualizationState) => Partial<VisualizationState>) => void,
+): (value: VisualizationState[K]) => void {
+  return (value) =>
+    set((s) => {
+      const next = { ...s, [key]: value };
+      saveSettings(next);
+      return { [key]: value } as Partial<VisualizationState>;
+    });
+}
+
 const saved = loadSettings();
 const initialTheme = (saved.theme as Theme) ?? 'light';
 applyTheme(initialTheme);
@@ -107,18 +121,12 @@ export const useVisualizationStore = create<VisualizationState>((set) => ({
     applyTheme(theme);
     set((s) => { const next = { ...s, theme }; saveSettings(next); return { theme }; });
   },
-  setAutoRefresh: (autoRefresh) =>
-    set((s) => { const next = { ...s, autoRefresh }; saveSettings(next); return { autoRefresh }; }),
-  setRefreshInterval: (refreshInterval) =>
-    set((s) => { const next = { ...s, refreshInterval }; saveSettings(next); return { refreshInterval }; }),
-  setDefaultTimeRange: (defaultTimeRange) =>
-    set((s) => { const next = { ...s, defaultTimeRange }; saveSettings(next); return { defaultTimeRange }; }),
-  setShowChartLabels: (showChartLabels) =>
-    set((s) => { const next = { ...s, showChartLabels }; saveSettings(next); return { showChartLabels }; }),
-  setTablePageSize: (tablePageSize) =>
-    set((s) => { const next = { ...s, tablePageSize }; saveSettings(next); return { tablePageSize }; }),
-  setTimezone: (timezone) =>
-    set((s) => { const next = { ...s, timezone }; saveSettings(next); return { timezone }; }),
+  setAutoRefresh: createPersistedSetter('autoRefresh', set),
+  setRefreshInterval: createPersistedSetter('refreshInterval', set),
+  setDefaultTimeRange: createPersistedSetter('defaultTimeRange', set),
+  setShowChartLabels: createPersistedSetter('showChartLabels', set),
+  setTablePageSize: createPersistedSetter('tablePageSize', set),
+  setTimezone: createPersistedSetter('timezone', set),
   setTimezoneAutoDetect: (timezoneAutoDetect) =>
     set((s) => {
       const timezone = timezoneAutoDetect ? getBrowserTimezone() : s.timezone;
@@ -126,58 +134,13 @@ export const useVisualizationStore = create<VisualizationState>((set) => ({
       saveSettings(next);
       return { timezoneAutoDetect, timezone };
     }),
-  setDateFormat: (dateFormat) =>
-    set((s) => { const next = { ...s, dateFormat }; saveSettings(next); return { dateFormat }; }),
-  setTimeFormat: (timeFormat) =>
-    set((s) => { const next = { ...s, timeFormat }; saveSettings(next); return { timeFormat }; }),
-  setIntegrationsViewMode: (integrationsViewMode) =>
-    set((s) => { const next = { ...s, integrationsViewMode }; saveSettings(next); return { integrationsViewMode }; }),
+  setDateFormat: createPersistedSetter('dateFormat', set),
+  setTimeFormat: createPersistedSetter('timeFormat', set),
+  setIntegrationsViewMode: createPersistedSetter('integrationsViewMode', set),
 }));
 
-function formatDatePart(date: Date, format: DateFormat, timezone: string): string {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: timezone,
-  }).formatToParts(date);
-  const y = parts.find((p) => p.type === 'year')!.value;
-  const m = parts.find((p) => p.type === 'month')!.value;
-  const d = parts.find((p) => p.type === 'day')!.value;
-  switch (format) {
-    case 'YYYY/MM/DD': return `${y}/${m}/${d}`;
-    case 'DD/MM/YYYY': return `${d}/${m}/${y}`;
-    case 'MM/DD/YYYY': return `${m}/${d}/${y}`;
-    case 'YYYY-MM-DD': return `${y}-${m}-${d}`;
-    case 'DD-MM-YYYY': return `${d}-${m}-${y}`;
-    case 'MM-DD-YYYY': return `${m}-${d}-${y}`;
-  }
-}
-
-export function formatTimestamp(
-  value: string | number | Date | null | undefined,
-  timezone: string,
-  dateFormat?: DateFormat,
-  timeFormat?: TimeFormat,
-  options?: Intl.DateTimeFormatOptions,
-): string {
-  if (value == null) return '--';
-  const date = value instanceof Date ? value : new Date(value);
-  if (isNaN(date.getTime())) return String(value);
-  if (options) {
-    return date.toLocaleString(undefined, { timeZone: timezone, ...options });
-  }
-  const datePart = formatDatePart(date, dateFormat ?? 'DD-MM-YYYY', timezone);
-  const hour12 = (timeFormat ?? '24h') === '12h';
-  const timePart = date.toLocaleTimeString(undefined, {
-    timeZone: timezone,
-    hour12,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-  return `${datePart}, ${timePart}`;
-}
+export { formatTimestamp } from '@/utils/format';
+import { formatTimestamp } from '@/utils/format';
 
 export function useFormatTimestamp() {
   const timezone = useVisualizationStore((s) => s.timezone);

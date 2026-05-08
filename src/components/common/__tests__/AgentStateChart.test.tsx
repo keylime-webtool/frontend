@@ -51,4 +51,51 @@ describe('AgentStateChart', () => {
       expect(screen.queryByText('No agents found')).not.toBeInTheDocument();
     });
   });
+
+  it('renders pie chart with multiple states', async () => {
+    const { agentsApi } = await import('@/api/agents');
+    vi.mocked(agentsApi.list).mockResolvedValueOnce({
+      data: {
+        items: [
+          { state: 'GET_QUOTE', attestation_mode: 'Pull' },
+          { state: 'GET_QUOTE', attestation_mode: 'Pull' },
+          { state: 'PASS', attestation_mode: 'Push' },
+          { state: 'FAILED', attestation_mode: 'Pull' },
+          { state: 'PENDING', attestation_mode: 'Push' },
+        ],
+      },
+    } as never);
+    const { container } = renderChart();
+    await vi.waitFor(() => {
+      expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+    });
+  });
+
+  it('renders chart with unknown agent states', async () => {
+    const { agentsApi } = await import('@/api/agents');
+    vi.mocked(agentsApi.list).mockResolvedValueOnce({
+      data: {
+        items: [
+          { state: undefined, attestation_mode: undefined },
+        ],
+      },
+    } as never);
+    const { container } = renderChart();
+    await vi.waitFor(() => {
+      expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+    });
+  });
+
+  it('handles flat array response without items wrapper', async () => {
+    const { agentsApi } = await import('@/api/agents');
+    vi.mocked(agentsApi.list).mockResolvedValueOnce({
+      data: [
+        { state: 'PASS', attestation_mode: 'Push' },
+      ],
+    } as never);
+    const { container } = renderChart();
+    await vi.waitFor(() => {
+      expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument();
+    });
+  });
 });

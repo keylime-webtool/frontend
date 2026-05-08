@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { Agent, AgentListParams, Certificate, ImaLogEntry, BootLogEntry, PaginatedResponse } from '@/types';
+import type { Agent, AgentListParams, Certificate, ImaLogResponse, BootLogResponse, PaginatedResponse } from '@/types';
 import type { AttestationTimelinePoint } from '@/types';
 
 export const agentsApi = {
@@ -28,11 +28,11 @@ export const agentsApi = {
   },
 
   imaLog(agentId: string, params?: { search?: string }) {
-    return apiClient.get<ImaLogEntry[]>(`/agents/${agentId}/ima-log`, { params });
+    return apiClient.get<ImaLogResponse>(`/agents/${agentId}/ima-log`, { params });
   },
 
   bootLog(agentId: string) {
-    return apiClient.get<BootLogEntry[]>(`/agents/${agentId}/boot-log`);
+    return apiClient.get<BootLogResponse>(`/agents/${agentId}/boot-log`);
   },
 
   certificates(agentId: string) {

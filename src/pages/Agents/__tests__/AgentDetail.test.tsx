@@ -106,4 +106,113 @@ describe('AgentDetailPage', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Timeline' }));
     expect(await screen.findByText('No attestation timeline data')).toBeInTheDocument();
   });
+
+  it('IMA Log tab shows empty state', async () => {
+    renderDetail();
+    await screen.findByText('agent-001');
+    fireEvent.click(screen.getByRole('tab', { name: 'IMA Log' }));
+    expect(await screen.findByText('No IMA log entries')).toBeInTheDocument();
+  });
+
+  it('Boot Log tab shows empty state', async () => {
+    renderDetail();
+    await screen.findByText('agent-001');
+    fireEvent.click(screen.getByRole('tab', { name: 'Boot Log' }));
+    expect(await screen.findByText('No boot log entries')).toBeInTheDocument();
+  });
+
+  it('IMA Log tab shows entries when data exists', async () => {
+    const { agentsApi } = await import('@/api/agents');
+    vi.mocked(agentsApi.imaLog).mockResolvedValueOnce({
+      data: {
+        entries: [
+          { pcr: 10, template_name: 'ima-ng', filename: '/bin/bash', filedata_hash: 'sha256:abc123' },
+        ],
+      },
+    } as never);
+    renderDetail();
+    await screen.findByText('agent-001');
+    fireEvent.click(screen.getByRole('tab', { name: 'IMA Log' }));
+    expect(await screen.findByText('/bin/bash')).toBeInTheDocument();
+    expect(screen.getByText('ima-ng')).toBeInTheDocument();
+    expect(screen.getByText('sha256:abc123')).toBeInTheDocument();
+  });
+
+  it('Boot Log tab shows entries when data exists', async () => {
+    const { agentsApi } = await import('@/api/agents');
+    vi.mocked(agentsApi.bootLog).mockResolvedValueOnce({
+      data: {
+        entries: [
+          { pcr: 0, event_type: 'EV_POST_CODE', event_data: 'POST CODE', digest: '0xdeadbeef' },
+        ],
+      },
+    } as never);
+    renderDetail();
+    await screen.findByText('agent-001');
+    fireEvent.click(screen.getByRole('tab', { name: 'Boot Log' }));
+    expect(await screen.findByText('EV_POST_CODE')).toBeInTheDocument();
+    expect(screen.getByText('POST CODE')).toBeInTheDocument();
+    expect(screen.getByText('0xdeadbeef')).toBeInTheDocument();
+  });
+
+  it('Raw Data tab shows JSON data', async () => {
+    renderDetail();
+    await screen.findByText('agent-001');
+    fireEvent.click(screen.getByRole('tab', { name: 'Raw Data' }));
+    expect(await screen.findByText(/test/)).toBeInTheDocument();
+  });
+
+  it('Raw Data tab copy button exists', async () => {
+    renderDetail();
+    await screen.findByText('agent-001');
+    fireEvent.click(screen.getByRole('tab', { name: 'Raw Data' }));
+    expect(await screen.findByLabelText('Copy raw data to clipboard')).toBeInTheDocument();
+  });
+
+  it('Raw Data tab source buttons are rendered', async () => {
+    renderDetail();
+    await screen.findByText('agent-001');
+    fireEvent.click(screen.getByRole('tab', { name: 'Raw Data' }));
+    await screen.findByText(/test/);
+    expect(screen.getByText('All')).toBeInTheDocument();
+    expect(screen.getByText('Backend')).toBeInTheDocument();
+    expect(screen.getByText('Registrar')).toBeInTheDocument();
+    expect(screen.getByText('Verifier')).toBeInTheDocument();
+  });
+
+  it('Raw Data tab switches source on button click', async () => {
+    renderDetail();
+    await screen.findByText('agent-001');
+    fireEvent.click(screen.getByRole('tab', { name: 'Raw Data' }));
+    await screen.findByText(/test/);
+    fireEvent.click(screen.getByText('Backend'));
+    const { agentsApi } = await import('@/api/agents');
+    expect(agentsApi.raw).toHaveBeenCalledWith('agent-001', 'backend');
+  });
+
+  it('TPM Policy tab shows raw policy when JSON is invalid', async () => {
+    const { agentsApi } = await import('@/api/agents');
+    vi.mocked(agentsApi.get).mockResolvedValueOnce({
+      data: {
+        id: 'agent-001', ip: '10.0.0.1', port: 9002,
+        state: 'GET_QUOTE', attestation_mode: 'Pull',
+        tpm_policy: 'not-valid-json',
+      },
+    } as never);
+    renderDetail();
+    expect(await screen.findByText('not-valid-json')).toBeInTheDocument();
+  });
+
+  it('TPM Policy tab shows placeholder when no policy', async () => {
+    const { agentsApi } = await import('@/api/agents');
+    vi.mocked(agentsApi.get).mockResolvedValueOnce({
+      data: {
+        id: 'agent-001', ip: '10.0.0.1', port: 9002,
+        state: 'GET_QUOTE', attestation_mode: 'Pull',
+        tpm_policy: null,
+      },
+    } as never);
+    renderDetail();
+    expect(await screen.findByText('No TPM policy configured')).toBeInTheDocument();
+  });
 });

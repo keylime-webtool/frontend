@@ -1,4 +1,5 @@
-export type { Agent, AgentState, AgentListParams, AgentPcrValues, ImaLogEntry, BootLogEntry } from './agent';
+export type { Severity } from './severity';
+export type { Agent, AgentState, AgentListParams, AgentPcrValues, ImaLogEntry, BootLogEntry, ImaLogResponse, BootLogResponse } from './agent';
 export type { Attestation, AttestationSummary, AttestationTimelinePoint, FailureCategoryCount, AttestationIncident, FailureType } from './attestation';
 export type { Policy, PolicyVersion, PolicyImpactResult, PolicyKind, ApprovalState } from './policy';
 export type { Certificate, CertificateExpirySummary, CertificateStatus, CertificateTimelineEntry, CertificateType, ExpiryCategory, ValidationStatus } from './certificate';

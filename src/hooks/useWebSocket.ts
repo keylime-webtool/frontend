@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || `ws://${window.location.host}/ws`;
 
+const INITIAL_RECONNECT_DELAY_MS = 1000;
+const MAX_RECONNECT_DELAY_MS = 30000;
+const BACKOFF_MULTIPLIER = 2;
+
 interface UseWebSocketOptions {
   channel: string;
   onMessage: (data: unknown) => void;
@@ -45,7 +49,7 @@ export function useWebSocket({ channel, onMessage, enabled = true }: UseWebSocke
 
       ws.onclose = () => {
         setConnected(false);
-        const delay = Math.min(1000 * 2 ** retryCountRef.current, 30000);
+        const delay = Math.min(INITIAL_RECONNECT_DELAY_MS * BACKOFF_MULTIPLIER ** retryCountRef.current, MAX_RECONNECT_DELAY_MS);
         retryCountRef.current += 1;
         reconnectTimeoutRef.current = setTimeout(connect, delay);
       };

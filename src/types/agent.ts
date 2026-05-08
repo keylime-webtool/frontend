@@ -49,17 +49,23 @@ export interface AgentPcrValues {
 }
 
 export interface ImaLogEntry {
-  index: number;
-  template: string;
-  file_path: string;
-  file_hash: string;
-  policy_match: boolean;
+  pcr: number;
+  template_name: string;
+  filename: string;
+  filedata_hash: string;
 }
 
 export interface BootLogEntry {
-  index: number;
+  pcr: number;
   event_type: string;
+  event_data: string;
   digest: string;
-  description: string;
-  validation_status: 'valid' | 'invalid' | 'unknown';
+}
+
+export interface ImaLogResponse {
+  entries: ImaLogEntry[];
+}
+
+export interface BootLogResponse {
+  entries: BootLogEntry[];
 }

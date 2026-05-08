@@ -12,40 +12,18 @@ import { alertsApi } from '@/api/alerts';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { useFormatTimestamp } from '@/store/visualizationStore';
 import type { Alert } from '@/types';
+import {
+  ALERT_SEVERITY_COLORS, ALERT_TYPE_COLORS, ALERT_STATE_COLORS, ALERT_FALLBACK_COLOR,
+} from '@/constants/colors';
+import { createPieLabelRenderer } from '@/utils/pieLabel';
 
 type AlertChartDimension = 'severity' | 'type' | 'state';
-
-const ALERT_SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ea4335',
-  warning: '#f9ab00',
-  info: '#1a73e8',
-};
-
-const ALERT_STATE_COLORS: Record<string, string> = {
-  new: '#ea4335',
-  acknowledged: '#f9ab00',
-  under_investigation: '#4285f4',
-  resolved: '#34a853',
-  dismissed: '#9e9e9e',
-};
-
-const ALERT_TYPE_COLORS: Record<string, string> = {
-  attestation_failure: '#ea4335',
-  cert_expiry: '#f9ab00',
-  policy_violation: '#e8710a',
-  pcr_change: '#9334e6',
-  service_down: '#d93025',
-  rate_limit: '#4285f4',
-  clock_skew: '#00897b',
-};
 
 const ALERT_COLOR_MAPS: Record<AlertChartDimension, Record<string, string>> = {
   severity: ALERT_SEVERITY_COLORS,
   type: ALERT_TYPE_COLORS,
   state: ALERT_STATE_COLORS,
 };
-
-const ALERT_FALLBACK_COLOR = '#bdbdbd';
 
 // Agent states used to derive attestation stats as a fallback
 const FAILED_STATES = new Set([
@@ -218,32 +196,11 @@ export function Dashboard() {
                 innerRadius={45}
                 dataKey="value"
                 nameKey="name"
-                label={({ cx = 0, cy = 0, midAngle = 0, outerRadius = 0, name = '', value = 0 }: {
-                  cx?: number; cy?: number; midAngle?: number; outerRadius?: number;
-                  name?: string; value?: number;
-                }) => {
-                  const RADIAN = Math.PI / 180;
-                  const radius = outerRadius + 18;
-                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                  const colors = ALERT_COLOR_MAPS[alertChartDimension];
-                  return (
-                    <text
-                      x={x} y={y}
-                      fill={colors[name] ?? ALERT_FALLBACK_COLOR}
-                      textAnchor={x > cx ? 'start' : 'end'}
-                      dominantBaseline="central"
-                      fontSize={12}
-                      style={{ cursor: 'pointer' }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/alerts?${alertChartDimension}=${encodeURIComponent(name)}`);
-                      }}
-                    >
-                      {`${name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} (${value})`}
-                    </text>
-                  );
-                }}
+                label={createPieLabelRenderer({
+                  colors: ALERT_COLOR_MAPS[alertChartDimension],
+                  fallbackColor: ALERT_FALLBACK_COLOR,
+                  onClick: (name) => navigate(`/alerts?${alertChartDimension}=${encodeURIComponent(name)}`),
+                })}
                 labelLine
                 style={{ cursor: 'pointer' }}
                 onClick={(_data, index) => {

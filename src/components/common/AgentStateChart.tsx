@@ -3,24 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
 import { agentsApi } from '@/api/agents';
-
-const STATE_COLORS: Record<string, string> = {
-  // Pull-mode states
-  GET_QUOTE: '#34a853',
-  PROVIDE_V: '#4285f4',
-  REGISTERED: '#a0c4ff',
-  FAILED: '#ea4335',
-  RETRY: '#f9ab00',
-  TERMINATED: '#9e9e9e',
-  INVALID_QUOTE: '#d93025',
-  TENANT_FAILED: '#c62828',
-  // Push-mode states
-  PASS: '#34a853',
-  FAIL: '#ea4335',
-  PENDING: '#f9ab00',
-  TIMEOUT: '#ff6d00',
-  UNKNOWN: '#bdbdbd',
-};
+import { AGENT_STATE_COLORS } from '@/constants/colors';
+import { createPieLabelRenderer } from '@/utils/pieLabel';
 
 const PULL_STATES = new Set([
   'GET_QUOTE', 'PROVIDE_V', 'REGISTERED', 'FAILED',
@@ -82,7 +66,7 @@ export function AgentStateChart() {
           {stateDistribution
             .filter((entry) => PULL_STATES.has(entry.state))
             .map((entry) => {
-              const color = STATE_COLORS[entry.state] ?? STATE_COLORS.UNKNOWN;
+              const color = AGENT_STATE_COLORS[entry.state] ?? AGENT_STATE_COLORS.UNKNOWN;
               return (
                 <pattern
                   key={entry.state}
@@ -106,35 +90,19 @@ export function AgentStateChart() {
           innerRadius={50}
           dataKey="value"
           nameKey="name"
-          label={({ cx = 0, cy = 0, midAngle = 0, outerRadius = 0, name = '', value = 0, index = 0 }: {
-            cx?: number; cy?: number; midAngle?: number; outerRadius?: number;
-            name?: string; value?: number; index?: number;
-          }) => {
-            const RADIAN = Math.PI / 180;
-            const radius = outerRadius + 20;
-            const x = cx + radius * Math.cos(-midAngle * RADIAN);
-            const y = cy + radius * Math.sin(-midAngle * RADIAN);
-            return (
-              <text
-                x={x}
-                y={y}
-                fill={STATE_COLORS[stateDistribution[index]?.state] ?? STATE_COLORS.UNKNOWN}
-                textAnchor={x > cx ? 'start' : 'end'}
-                dominantBaseline="central"
-                fontSize={12}
-                style={{ cursor: 'pointer' }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const entry = stateDistribution[index];
-                  if (entry) {
-                    navigate(`/agents?state=${encodeURIComponent(entry.state)}`);
-                  }
-                }}
-              >
-                {`${name} (${value})`}
-              </text>
-            );
-          }}
+          label={createPieLabelRenderer({
+            colors: AGENT_STATE_COLORS,
+            offset: 20,
+            formatLabel: (name, value) => `${name} (${value})`,
+            getColor: (_name, index) =>
+              AGENT_STATE_COLORS[stateDistribution[index]?.state] ?? AGENT_STATE_COLORS.UNKNOWN,
+            onClick: (_name, index) => {
+              const entry = stateDistribution[index];
+              if (entry) {
+                navigate(`/agents?state=${encodeURIComponent(entry.state)}`);
+              }
+            },
+          })}
           labelLine
           style={{ cursor: 'pointer' }}
           onClick={(_data, index) => {
@@ -150,9 +118,9 @@ export function AgentStateChart() {
               fill={
                 PULL_STATES.has(entry.state)
                   ? `url(#stripe-${entry.state})`
-                  : (STATE_COLORS[entry.state] ?? STATE_COLORS.UNKNOWN)
+                  : (AGENT_STATE_COLORS[entry.state] ?? AGENT_STATE_COLORS.UNKNOWN)
               }
-              stroke={STATE_COLORS[entry.state] ?? STATE_COLORS.UNKNOWN}
+              stroke={AGENT_STATE_COLORS[entry.state] ?? AGENT_STATE_COLORS.UNKNOWN}
               strokeWidth={1}
             />
           ))}
@@ -169,7 +137,7 @@ export function AgentStateChart() {
                   const entry = stateDistribution[index];
                   if (!entry) return null;
                   const isPull = PULL_STATES.has(entry.state);
-                  const color = STATE_COLORS[entry.state] ?? STATE_COLORS.UNKNOWN;
+                  const color = AGENT_STATE_COLORS[entry.state] ?? AGENT_STATE_COLORS.UNKNOWN;
                   return (
                     <li
                       key={item.value}
