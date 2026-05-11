@@ -1,8 +1,13 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useOutletContext, Link } from 'react-router-dom';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts';
 import { KpiCard } from '@/components/common/KpiCard';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { attestationsApi } from '@/api/attestations';
+import { useFormatTimestamp } from '@/store/visualizationStore';
 
 interface FailureEvent {
   agent_id: string;
@@ -14,6 +19,7 @@ interface FailureEvent {
 
 export function Attestations() {
   const { timeRange } = useOutletContext<{ timeRange: string }>();
+  const fmtTs = useFormatTimestamp();
 
   const { data: summary } = useQuery({
     queryKey: ['attestations', 'summary', timeRange],
@@ -26,6 +32,22 @@ export function Attestations() {
     queryFn: () => attestationsApi.failures(timeRange),
     select: (res) => res.data,
   });
+
+  const { data: attestationTimeline } = useQuery({
+    queryKey: ['attestations', 'timeline', timeRange],
+    queryFn: () => attestationsApi.timeline(timeRange),
+    select: (res) => res.data,
+  });
+
+  const timelineData = useMemo(() => {
+    const raw = Array.isArray(attestationTimeline) ? attestationTimeline : [];
+    return raw.map((point) => ({
+      ...point,
+      label: fmtTs(point.hour, {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      }),
+    }));
+  }, [attestationTimeline, fmtTs]);
 
   return (
     <div>
@@ -82,13 +104,33 @@ export function Attestations() {
 
         <div className="section">
           <h2 className="section__title">Hourly Volume</h2>
-          <div className="placeholder">
-            <div className="placeholder__icon">&#x1F4CA;</div>
-            <div className="placeholder__text">Attestation volume bar chart</div>
-            <div className="placeholder__subtext">
-              Hourly attestation counts with pass/fail stacking.
+          {timelineData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={timelineData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                <XAxis dataKey="label" fontSize={11} tick={{ fill: 'var(--color-text-secondary)' }} />
+                <YAxis fontSize={11} tick={{ fill: 'var(--color-text-secondary)' }} />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--color-text)',
+                  }}
+                />
+                <Bar dataKey="successful" name="Successful" fill="#34a853" stackId="a" />
+                <Bar dataKey="failed" name="Failed" fill="#ea4335" stackId="a" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="placeholder">
+              <div className="placeholder__icon">&#x1F4CA;</div>
+              <div className="placeholder__text">Attestation volume bar chart</div>
+              <div className="placeholder__subtext">
+                Hourly attestation counts with pass/fail stacking.
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
