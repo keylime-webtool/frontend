@@ -29,6 +29,7 @@ export interface Attestation {
 export interface AttestationSummary {
   total_successful: number;
   total_failed: number;
+  total_timed_out: number;
   average_latency_ms: number;
   success_rate: number;
 }
@@ -37,6 +38,7 @@ export interface AttestationTimelinePoint {
   hour: string;
   successful: number;
   failed: number;
+  timed_out: number;
 }
 
 export interface FailureCategoryCount {

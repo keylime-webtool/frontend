@@ -24,6 +24,12 @@ export const ALERT_TYPE_COLORS: Record<string, string> = {
 
 export const ALERT_FALLBACK_COLOR = '#bdbdbd';
 
+export const ATTESTATION_COLORS = {
+  successful: '#34a853',
+  failed: '#ea4335',
+  timed_out: '#ff6d00',
+} as const;
+
 export const AGENT_STATE_COLORS: Record<string, string> = {
   GET_QUOTE: '#34a853',
   PROVIDE_V: '#4285f4',
