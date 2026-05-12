@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
   PieChart, Pie, Cell, Legend, ResponsiveContainer,
 } from 'recharts';
@@ -62,6 +62,7 @@ function AlertPieChart({
             innerRadius={40}
             dataKey="value"
             nameKey="name"
+            isAnimationActive={false}
             label={createPieLabelRenderer({
               colors,
               fallbackColor: ALERT_FALLBACK_COLOR,
@@ -106,6 +107,7 @@ export function Alerts() {
     queryKey: ['alerts', 'summary'],
     queryFn: () => alertsApi.summary(),
     select: (res) => res.data,
+    placeholderData: keepPreviousData,
   });
 
   const { data: alerts, isLoading } = useQuery({
@@ -117,6 +119,7 @@ export function Alerts() {
         type: typeFilter || undefined,
       }),
     select: (res) => res.data,
+    placeholderData: keepPreviousData,
   });
 
   const alertItems = useMemo(

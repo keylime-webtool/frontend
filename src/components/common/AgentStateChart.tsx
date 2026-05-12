@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
 import { agentsApi } from '@/api/agents';
 import { AGENT_STATE_COLORS } from '@/constants/colors';
@@ -25,6 +25,7 @@ export function AgentStateChart() {
     queryKey: ['agents', 'dashboard'],
     queryFn: () => agentsApi.list({ per_page: 100 }),
     select: (res) => res.data,
+    placeholderData: keepPreviousData,
   });
 
   const agentItems = useMemo(
@@ -90,6 +91,7 @@ export function AgentStateChart() {
           innerRadius={50}
           dataKey="value"
           nameKey="name"
+          isAnimationActive={false}
           label={createPieLabelRenderer({
             colors: AGENT_STATE_COLORS,
             offset: 20,
