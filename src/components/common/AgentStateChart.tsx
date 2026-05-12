@@ -133,8 +133,8 @@ export function AgentStateChart() {
                 display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
                 listStyle: 'none', padding: 0, margin: '8px 0 0', gap: '8px 16px',
               }}>
-                {payload.map((item, index) => {
-                  const entry = stateDistribution[index];
+                {payload.map((item) => {
+                  const entry = item.payload as StateEntry;
                   if (!entry) return null;
                   const isPull = PULL_STATES.has(entry.state);
                   const color = AGENT_STATE_COLORS[entry.state] ?? AGENT_STATE_COLORS.UNKNOWN;
