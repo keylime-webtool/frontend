@@ -14,7 +14,7 @@ interface UseWebSocketOptions {
 
 export function useWebSocket({ channel, onMessage, enabled = true }: UseWebSocketOptions) {
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const retryCountRef = useRef(0);
   const onMessageRef = useRef(onMessage);
   const [connected, setConnected] = useState(false);
