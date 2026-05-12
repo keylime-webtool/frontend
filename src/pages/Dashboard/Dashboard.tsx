@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
   PieChart, Pie, Cell, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -45,18 +45,21 @@ export function Dashboard() {
     queryKey: ['agents', 'dashboard'],
     queryFn: () => agentsApi.list({ per_page: 100 }),
     select: (res) => res.data,
+    placeholderData: keepPreviousData,
   });
 
   const { data: attestationSummary } = useQuery({
     queryKey: ['attestations', 'summary', timeRange],
     queryFn: () => attestationsApi.summary(timeRange),
     select: (res) => res.data,
+    placeholderData: keepPreviousData,
   });
 
   const { data: attestationTimeline } = useQuery({
     queryKey: ['attestations', 'timeline', timeRange],
     queryFn: () => attestationsApi.timeline(timeRange),
     select: (res) => res.data,
+    placeholderData: keepPreviousData,
   });
 
   const timelineData = useMemo(() => {
@@ -73,12 +76,14 @@ export function Dashboard() {
     queryKey: ['alerts', 'summary'],
     queryFn: () => alertsApi.summary(),
     select: (res) => res.data,
+    placeholderData: keepPreviousData,
   });
 
   const { data: alertsData } = useQuery({
     queryKey: ['alerts', 'dashboard'],
     queryFn: () => alertsApi.list({ per_page: 100 }),
     select: (res) => res.data,
+    placeholderData: keepPreviousData,
   });
 
   const [alertChartDimension, setAlertChartDimension] = useState<AlertChartDimension>('severity');
@@ -204,6 +209,7 @@ export function Dashboard() {
                 innerRadius={45}
                 dataKey="value"
                 nameKey="name"
+                isAnimationActive={false}
                 label={createPieLabelRenderer({
                   colors: ALERT_COLOR_MAPS[alertChartDimension],
                   fallbackColor: ALERT_FALLBACK_COLOR,
