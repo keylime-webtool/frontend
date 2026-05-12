@@ -21,8 +21,9 @@ vi.mock('@/api/agents', () => ({
           { id: 'a1', state: 'GET_QUOTE', attestation_mode: 'Pull' },
           { id: 'a2', state: 'FAILED', attestation_mode: 'Pull' },
           { id: 'a3', state: 'PASS', attestation_mode: 'Push' },
+          { id: 'a4', state: 'TIMEOUT', attestation_mode: 'Push' },
         ],
-        total_items: 3,
+        total_items: 4,
       },
     }),
   },
@@ -83,13 +84,13 @@ describe('Dashboard', () => {
 
   it('uses fallback agent attestation stats when summary is null', async () => {
     renderDashboard();
-    // 2 of 3 agents are attested (GET_QUOTE, FAILED, PASS); 1 failed → 66.67%
-    expect(await screen.findByText('66.67%')).toBeInTheDocument();
+    // 4 attested agents (GET_QUOTE, FAILED, PASS, TIMEOUT); 1 failed + 1 timed out → 50%
+    expect(await screen.findByText('50.00%')).toBeInTheDocument();
   });
 
   it('renders total agents from API', async () => {
     renderDashboard();
-    expect(await screen.findByText('3')).toBeInTheDocument();
+    expect(await screen.findByText('4')).toBeInTheDocument();
   });
 
   it('renders alert summary subtitle', async () => {
@@ -156,9 +157,48 @@ describe('Dashboard', () => {
   it('renders failed attestation count from summary', async () => {
     const { attestationsApi } = await import('@/api/attestations');
     vi.mocked(attestationsApi.summary).mockResolvedValueOnce({
-      data: { success_rate: 90, total_failed: 7, total_attested: 70 },
+      data: { success_rate: 90, total_failed: 7, total_timed_out: 3, total_attested: 70 },
     } as never);
     renderDashboard();
     expect(await screen.findByText('7')).toBeInTheDocument();
+  });
+
+  it('renders timed-out attestations KPI card', async () => {
+    renderDashboard();
+    expect(await screen.findByText('Timed-Out Attestations')).toBeInTheDocument();
+  });
+
+  it('renders timed-out count from fallback agent states', async () => {
+    renderDashboard();
+    const timedOutCard = await screen.findByText('Timed-Out Attestations');
+    expect(timedOutCard).toBeInTheDocument();
+  });
+
+  it('renders timed-out count from summary when available', async () => {
+    const { attestationsApi } = await import('@/api/attestations');
+    vi.mocked(attestationsApi.summary).mockResolvedValueOnce({
+      data: { success_rate: 85, total_failed: 10, total_timed_out: 8, total_attested: 100 },
+    } as never);
+    renderDashboard();
+    expect(await screen.findByText('8')).toBeInTheDocument();
+  });
+
+  it('computes three-way success rate excluding both failed and timed-out', async () => {
+    const { agentsApi } = await import('@/api/agents');
+    vi.mocked(agentsApi.list).mockResolvedValueOnce({
+      data: {
+        items: [
+          { id: 'a1', state: 'PASS', attestation_mode: 'Push' },
+          { id: 'a2', state: 'PASS', attestation_mode: 'Push' },
+          { id: 'a3', state: 'FAIL', attestation_mode: 'Push' },
+          { id: 'a4', state: 'TIMEOUT', attestation_mode: 'Push' },
+          { id: 'a5', state: 'TIMEOUT', attestation_mode: 'Push' },
+        ],
+        total_items: 5,
+      },
+    } as never);
+    renderDashboard();
+    // 5 attested, 1 fail + 2 timeout → success = 2/5 = 40%
+    expect(await screen.findByText('40.00%')).toBeInTheDocument();
   });
 });

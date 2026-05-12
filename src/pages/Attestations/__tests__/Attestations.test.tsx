@@ -10,8 +10,9 @@ vi.mock('@/api/attestations', () => ({
       data: {
         total_successful: 150,
         total_failed: 5,
+        total_timed_out: 3,
         average_latency_ms: 42,
-        success_rate: 96.77,
+        success_rate: 94.94,
       },
     }),
     failures: vi.fn().mockResolvedValue({
@@ -23,6 +24,12 @@ vi.mock('@/api/attestations', () => ({
           severity: 'critical',
           timestamp: '2025-01-01T00:00:00Z',
         },
+      ],
+    }),
+    timeline: vi.fn().mockResolvedValue({
+      data: [
+        { hour: '2025-01-01T00:00:00Z', successful: 10, failed: 2, timed_out: 1 },
+        { hour: '2025-01-01T01:00:00Z', successful: 12, failed: 1, timed_out: 0 },
       ],
     }),
   },
@@ -61,8 +68,9 @@ describe('Attestations', () => {
     renderAttestations();
     expect(await screen.findByText('150')).toBeInTheDocument();
     expect(await screen.findByText('5')).toBeInTheDocument();
+    expect(await screen.findByText('3')).toBeInTheDocument();
     expect(await screen.findByText('42ms')).toBeInTheDocument();
-    expect(await screen.findByText('96.77%')).toBeInTheDocument();
+    expect(await screen.findByText('94.94%')).toBeInTheDocument();
   });
 
   it('renders failure categorization with failure events', async () => {
@@ -85,11 +93,22 @@ describe('Attestations', () => {
       data: {
         total_successful: 100,
         total_failed: 0,
+        total_timed_out: 0,
         average_latency_ms: 10,
         success_rate: 100,
       },
     } as never);
     renderAttestations();
     expect(await screen.findByText('100.0%')).toBeInTheDocument();
+  });
+
+  it('renders Timed Out KPI card', async () => {
+    renderAttestations();
+    expect(await screen.findByText('Timed Out')).toBeInTheDocument();
+  });
+
+  it('renders hourly volume section heading', () => {
+    renderAttestations();
+    expect(screen.getByText('Hourly Volume')).toBeInTheDocument();
   });
 });

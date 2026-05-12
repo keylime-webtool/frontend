@@ -14,6 +14,7 @@ import { useFormatTimestamp } from '@/store/visualizationStore';
 import type { Alert } from '@/types';
 import {
   ALERT_SEVERITY_COLORS, ALERT_TYPE_COLORS, ALERT_STATE_COLORS, ALERT_FALLBACK_COLOR,
+  ATTESTATION_COLORS,
 } from '@/constants/colors';
 import { createPieLabelRenderer } from '@/utils/pieLabel';
 
@@ -27,8 +28,9 @@ const ALERT_COLOR_MAPS: Record<AlertChartDimension, Record<string, string>> = {
 
 // Agent states used to derive attestation stats as a fallback
 const FAILED_STATES = new Set([
-  'FAILED', 'INVALID_QUOTE', 'TENANT_FAILED', 'FAIL', 'TIMEOUT',
+  'FAILED', 'INVALID_QUOTE', 'TENANT_FAILED', 'FAIL',
 ]);
+const TIMEOUT_STATES = new Set(['TIMEOUT']);
 const ATTESTED_STATES = new Set([
   'GET_QUOTE', 'PROVIDE_V', 'REGISTERED', 'PASS',
   'FAILED', 'INVALID_QUOTE', 'TENANT_FAILED', 'FAIL', 'TIMEOUT',
@@ -86,14 +88,13 @@ export function Dashboard() {
     [agents]
   );
 
-  // Derive attestation stats from agent states when the summary endpoint
-  // returns no data (e.g. backend attestation history not yet available).
   const agentAttestation = useMemo(() => {
     const attested = agentItems.filter((a) => ATTESTED_STATES.has((a.state ?? '').toUpperCase()));
     if (attested.length === 0) return null;
     const failedCount = attested.filter((a) => FAILED_STATES.has((a.state ?? '').toUpperCase())).length;
-    const successRate = ((attested.length - failedCount) / attested.length) * 100;
-    return { successRate, failedCount };
+    const timedOutCount = attested.filter((a) => TIMEOUT_STATES.has((a.state ?? '').toUpperCase())).length;
+    const successRate = ((attested.length - failedCount - timedOutCount) / attested.length) * 100;
+    return { successRate, failedCount, timedOutCount };
   }, [agentItems]);
 
   const alertItems: Alert[] = useMemo(
@@ -143,7 +144,14 @@ export function Dashboard() {
           value={attestationSummary?.total_failed ?? agentAttestation?.failedCount ?? '--'}
           variant="danger"
           subtitle={`in last ${timeRange}`}
-          linkTo="/agents?state=FAILED,INVALID_QUOTE,TENANT_FAILED,FAIL,TIMEOUT"
+          linkTo="/agents?state=FAILED,INVALID_QUOTE,TENANT_FAILED,FAIL"
+        />
+        <KpiCard
+          title="Timed-Out Attestations"
+          value={attestationSummary?.total_timed_out ?? agentAttestation?.timedOutCount ?? '--'}
+          variant="warning"
+          subtitle={`in last ${timeRange}`}
+          linkTo="/agents?state=TIMEOUT"
         />
         <KpiCard
           title="Urgent Alerts"
@@ -252,8 +260,10 @@ export function Dashboard() {
                   color: 'var(--color-text)',
                 }}
               />
-              <Bar dataKey="successful" name="Successful" fill="#34a853" stackId="a" />
-              <Bar dataKey="failed" name="Failed" fill="#ea4335" stackId="a" />
+              <Bar dataKey="successful" name="Successful" fill={ATTESTATION_COLORS.successful} stackId="a" />
+              <Bar dataKey="failed" name="Failed" fill={ATTESTATION_COLORS.failed} stackId="a" />
+              <Bar dataKey="timed_out" name="Timed Out" fill={ATTESTATION_COLORS.timed_out} stackId="a" />
+              <Legend />
             </BarChart>
           </ResponsiveContainer>
         ) : (

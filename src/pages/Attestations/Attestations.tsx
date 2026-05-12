@@ -2,12 +2,13 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useOutletContext, Link } from 'react-router-dom';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { KpiCard } from '@/components/common/KpiCard';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { attestationsApi } from '@/api/attestations';
 import { useFormatTimestamp } from '@/store/visualizationStore';
+import { ATTESTATION_COLORS } from '@/constants/colors';
 
 interface FailureEvent {
   agent_id: string;
@@ -68,6 +69,11 @@ export function Attestations() {
           variant="danger"
         />
         <KpiCard
+          title="Timed Out"
+          value={summary?.total_timed_out ?? '--'}
+          variant="warning"
+        />
+        <KpiCard
           title="Avg Latency"
           value={summary?.average_latency_ms != null ? `${summary.average_latency_ms}ms` : '--'}
         />
@@ -118,8 +124,10 @@ export function Attestations() {
                     color: 'var(--color-text)',
                   }}
                 />
-                <Bar dataKey="successful" name="Successful" fill="#34a853" stackId="a" />
-                <Bar dataKey="failed" name="Failed" fill="#ea4335" stackId="a" />
+                <Bar dataKey="successful" name="Successful" fill={ATTESTATION_COLORS.successful} stackId="a" />
+                <Bar dataKey="failed" name="Failed" fill={ATTESTATION_COLORS.failed} stackId="a" />
+                <Bar dataKey="timed_out" name="Timed Out" fill={ATTESTATION_COLORS.timed_out} stackId="a" />
+                <Legend />
               </BarChart>
             </ResponsiveContainer>
           ) : (
