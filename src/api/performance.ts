@@ -6,6 +6,10 @@ export const performanceApi = {
     return apiClient.get<PerformanceSummary>('/performance/summary');
   },
 
+  registrar() {
+    return apiClient.get('/performance/registrar');
+  },
+
   database() {
     return apiClient.get('/system/database');
   },

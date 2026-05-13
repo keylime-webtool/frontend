@@ -18,6 +18,11 @@ describe('performanceApi', () => {
     expect(mockGet).toHaveBeenCalledWith('/performance/summary');
   });
 
+  it('registrar calls GET /performance/registrar', async () => {
+    await performanceApi.registrar();
+    expect(mockGet).toHaveBeenCalledWith('/performance/registrar');
+  });
+
   it('database calls GET /system/database', async () => {
     await performanceApi.database();
     expect(mockGet).toHaveBeenCalledWith('/system/database');
