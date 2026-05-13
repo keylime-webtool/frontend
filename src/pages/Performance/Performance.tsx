@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { KpiCard } from '@/components/common/KpiCard';
 import { performanceApi } from '@/api/performance';
+import { agentsApi } from '@/api/agents';
+import type { IntegrationService } from '@/types';
 
 const CIRCUIT_BREAKER_LABELS: Record<string, string> = {
   closed: 'Closed',
@@ -28,6 +31,31 @@ export function Performance() {
     queryFn: () => performanceApi.summary(),
     select: (res) => res.data,
   });
+
+  const { data: services } = useQuery({
+    queryKey: ['integrations', 'status'],
+    queryFn: () => performanceApi.integrations(),
+    select: (res) => res.data,
+  });
+
+  const registrar = useMemo(() => {
+    const list = (Array.isArray(services) ? services : []) as IntegrationService[];
+    return list.find((s) => s.name.toLowerCase().includes('registrar')) ?? null;
+  }, [services]);
+
+  const { data: agentData } = useQuery({
+    queryKey: ['agents', 'count'],
+    queryFn: () => agentsApi.list({ per_page: 1 }),
+    select: (res) => res.data,
+  });
+
+  const registrarUp = registrar
+    ? registrar.status.toLowerCase() === 'up'
+    : perf?.registrar_reachable ?? null;
+
+  const registrarLatency = registrar?.latency_ms ?? perf?.registrar_latency_ms ?? null;
+
+  const registeredAgentCount = perf?.registered_agent_count ?? agentData?.total_items ?? null;
 
   return (
     <div>
@@ -57,6 +85,21 @@ export function Performance() {
           title="Capacity"
           value={perf?.capacity_utilization_pct != null ? `${perf.capacity_utilization_pct.toFixed(1)}%` : '--'}
           variant={perf?.capacity_utilization_pct != null ? capacityVariant(perf.capacity_utilization_pct) : 'default'}
+        />
+      </div>
+
+      <h2 className="section__title" style={{ marginTop: '24px' }}>Registrar Metrics</h2>
+      <div className="kpi-grid">
+        <KpiCard
+          title="Registrar Status"
+          value={registrarUp != null ? (registrarUp ? 'Reachable' : 'Unreachable') : '--'}
+          subtitle={registrarLatency != null ? `${registrarLatency} ms` : undefined}
+          variant={registrarUp != null ? (registrarUp ? 'success' : 'danger') : 'default'}
+        />
+        <KpiCard
+          title="Registered Agents"
+          value={registeredAgentCount ?? '--'}
+          variant="info"
         />
       </div>
 

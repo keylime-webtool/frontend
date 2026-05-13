@@ -41,6 +41,9 @@ export interface PerformanceSummary {
   estimated_attestation_rate: number | null;
   capacity_utilization_pct: number | null;
   database_status: string;
+  registrar_reachable?: boolean;
+  registrar_latency_ms?: number | null;
+  registered_agent_count?: number;
 }
 
 export interface TimeRange {
