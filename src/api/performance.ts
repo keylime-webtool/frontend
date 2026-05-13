@@ -1,9 +1,9 @@
 import apiClient from './client';
-import type { SystemPerformance, IntegrationService } from '@/types';
+import type { PerformanceSummary, IntegrationService } from '@/types';
 
 export const performanceApi = {
-  system() {
-    return apiClient.get<SystemPerformance>('/system/performance');
+  summary() {
+    return apiClient.get<PerformanceSummary>('/performance/summary');
   },
 
   database() {

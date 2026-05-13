@@ -2,10 +2,30 @@ import { useQuery } from '@tanstack/react-query';
 import { KpiCard } from '@/components/common/KpiCard';
 import { performanceApi } from '@/api/performance';
 
+const CIRCUIT_BREAKER_LABELS: Record<string, string> = {
+  closed: 'Closed',
+  open: 'Open',
+  half_open: 'Half-Open',
+};
+
+type CbVariant = 'success' | 'danger' | 'warning';
+
+const CIRCUIT_BREAKER_VARIANTS: Record<string, CbVariant> = {
+  closed: 'success',
+  open: 'danger',
+  half_open: 'warning',
+};
+
+function capacityVariant(pct: number): 'default' | 'warning' | 'danger' {
+  if (pct > 90) return 'danger';
+  if (pct > 70) return 'warning';
+  return 'default';
+}
+
 export function Performance() {
   const { data: perf } = useQuery({
-    queryKey: ['system', 'performance'],
-    queryFn: () => performanceApi.system(),
+    queryKey: ['performance', 'summary'],
+    queryFn: () => performanceApi.summary(),
     select: (res) => res.data,
   });
 
@@ -18,24 +38,25 @@ export function Performance() {
 
       <div className="kpi-grid">
         <KpiCard
-          title="CPU Usage"
-          value={perf ? `${perf.cpu_percent.toFixed(1)}%` : '--'}
-          variant={perf && perf.cpu_percent > 80 ? 'danger' : 'default'}
+          title="Verifier Status"
+          value={perf ? (perf.verifier_reachable ? 'Reachable' : 'Unreachable') : '--'}
+          subtitle={perf?.verifier_latency_ms != null ? `${perf.verifier_latency_ms} ms` : undefined}
+          variant={perf ? (perf.verifier_reachable ? 'success' : 'danger') : 'default'}
         />
         <KpiCard
-          title="Memory Usage"
-          value={perf ? `${perf.memory_percent.toFixed(1)}%` : '--'}
-          variant={perf && perf.memory_percent > 80 ? 'danger' : 'default'}
+          title="Circuit Breaker"
+          value={perf ? (CIRCUIT_BREAKER_LABELS[perf.circuit_breaker_state] ?? perf.circuit_breaker_state) : '--'}
+          variant={perf ? (CIRCUIT_BREAKER_VARIANTS[perf.circuit_breaker_state] ?? 'default') : 'default'}
         />
         <KpiCard
-          title="Attestations/sec"
-          value={perf?.attestations_per_sec ?? '--'}
+          title="Attestation Rate"
+          value={perf?.estimated_attestation_rate != null ? `${perf.estimated_attestation_rate}/s` : '--'}
           variant="success"
         />
         <KpiCard
-          title="Queue Depth"
-          value={perf?.queue_depth ?? '--'}
-          variant={perf && perf.queue_depth > 100 ? 'warning' : 'default'}
+          title="Capacity"
+          value={perf?.capacity_utilization_pct != null ? `${perf.capacity_utilization_pct.toFixed(1)}%` : '--'}
+          variant={perf?.capacity_utilization_pct != null ? capacityVariant(perf.capacity_utilization_pct) : 'default'}
         />
       </div>
 
