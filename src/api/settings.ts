@@ -3,6 +3,7 @@ import apiClient from './client';
 export interface KeylimeSettings {
   verifier_url: string;
   registrar_url: string;
+  seed_mock_data?: boolean;
 }
 
 export interface CertificateSettings {

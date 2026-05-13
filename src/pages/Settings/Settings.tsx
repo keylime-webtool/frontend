@@ -179,7 +179,7 @@ export function Settings() {
     // Save Verifier + Registrar to backend API, then reload
     if (verifierUrlChanged || registrarUrlChanged) {
       updateMutation.mutate(
-        { verifier_url: verifierUrl.trim(), registrar_url: registrarUrl.trim() },
+        { verifier_url: verifierUrl.trim(), registrar_url: registrarUrl.trim(), seed_mock_data: envMode === 'mock' },
         { onSuccess: () => window.location.reload() },
       );
     } else {

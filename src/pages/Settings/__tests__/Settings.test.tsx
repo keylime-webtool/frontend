@@ -204,6 +204,49 @@ describe('Settings', () => {
       const applyBtn = screen.getByText('Apply Changes');
       expect(applyBtn).not.toBeDisabled();
     });
+
+    it('sends seed_mock_data true when applying in mock mode', async () => {
+      const { settingsApi } = await import('@/api/settings');
+      renderWithProviders(<Settings />);
+      await waitFor(() => {
+        expect((screen.getByLabelText('Verifier URL') as HTMLInputElement).value).toBe('https://localhost:8881');
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Mock' }));
+      await waitFor(() => {
+        expect((screen.getByLabelText('Verifier URL') as HTMLInputElement).value).toBe('http://localhost:3000');
+      });
+      fireEvent.click(screen.getByText('Apply Changes'));
+      await waitFor(() => {
+        expect(settingsApi.updateKeylime).toHaveBeenCalledWith(
+          expect.objectContaining({ seed_mock_data: true }),
+        );
+      });
+    });
+
+    it('sends seed_mock_data false when applying in production mode', async () => {
+      const { settingsApi } = await import('@/api/settings');
+      renderWithProviders(<Settings />);
+      await waitFor(() => {
+        expect((screen.getByLabelText('Verifier URL') as HTMLInputElement).value).toBe('https://localhost:8881');
+      });
+      // Switch to mock then back to production to create a diff from saved values
+      fireEvent.click(screen.getByRole('button', { name: 'Mock' }));
+      await waitFor(() => {
+        expect((screen.getByLabelText('Verifier URL') as HTMLInputElement).value).toBe('http://localhost:3000');
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Production' }));
+      await waitFor(() => {
+        expect((screen.getByLabelText('Verifier URL') as HTMLInputElement).value).toBe('https://localhost:8881');
+      });
+      // Manually change a URL so Apply is enabled (production URLs match saved, so no diff otherwise)
+      fireEvent.change(screen.getByLabelText('Verifier URL'), { target: { value: 'https://verifier.example.com:8881' } });
+      fireEvent.click(screen.getByText('Apply Changes'));
+      await waitFor(() => {
+        expect(settingsApi.updateKeylime).toHaveBeenCalledWith(
+          expect.objectContaining({ seed_mock_data: false }),
+        );
+      });
+    });
   });
 
   describe('Certificates section', () => {
