@@ -13,9 +13,9 @@ import { performanceApi } from '../performance';
 beforeEach(() => vi.clearAllMocks());
 
 describe('performanceApi', () => {
-  it('system calls GET /system/performance', async () => {
-    await performanceApi.system();
-    expect(mockGet).toHaveBeenCalledWith('/system/performance');
+  it('summary calls GET /performance/summary', async () => {
+    await performanceApi.summary();
+    expect(mockGet).toHaveBeenCalledWith('/performance/summary');
   });
 
   it('database calls GET /system/database', async () => {
