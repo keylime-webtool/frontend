@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
 import { agentsApi } from '@/api/agents';

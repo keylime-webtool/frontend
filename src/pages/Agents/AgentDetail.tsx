@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { useFormatTimestamp } from '@/store/visualizationStore';

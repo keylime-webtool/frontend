@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';

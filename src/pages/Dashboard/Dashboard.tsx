@@ -9,7 +9,7 @@ import { AgentStateChart } from '@/components/common/AgentStateChart';
 import { attestationsApi } from '@/api/attestations';
 import { agentsApi } from '@/api/agents';
 import { alertsApi } from '@/api/alerts';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router';
 import { useFormatTimestamp } from '@/store/visualizationStore';
 import type { Alert } from '@/types';
 import {

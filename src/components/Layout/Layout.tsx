@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { useVisualizationStore } from '@/store/visualizationStore';
