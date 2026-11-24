@@ -10,40 +10,49 @@ vi.mock('@/api/audit', () => ({
       data: {
         items: [
           {
-            id: 'audit-1',
+            id: 1,
             timestamp: '2025-01-15T10:00:00Z',
-            severity: 'info',
-            action: 'agent_registered',
+            severity: 'INFO',
+            action: 'config_change',
             actor: 'admin@example.com',
-            resource_type: 'agent',
-            result: 'success',
+            resource: 'settings/keylime',
             source_ip: '192.168.1.1',
+            user_agent: 'Mozilla/5.0',
+            result: 'SUCCESS',
+            previous_hash: '0'.repeat(64),
+            entry_hash: 'a'.repeat(64),
           },
           {
-            id: 'audit-2',
+            id: 2,
             timestamp: '2025-01-15T11:00:00Z',
-            severity: 'warning',
-            action: 'policy_modified',
+            severity: 'WARNING',
+            action: 'alert_action',
             actor: 'operator@example.com',
-            resource_type: 'policy',
-            result: 'success',
-            source_ip: '10.0.0.5',
+            resource: '9d2c1f0a-1234-4abc-9def-567890abcdef',
+            source_ip: 'unknown',
+            user_agent: null,
+            result: 'acknowledged',
+            previous_hash: 'a'.repeat(64),
+            entry_hash: 'b'.repeat(64),
           },
         ],
+        page: 1,
+        page_size: 50,
+        total_items: 2,
+        total_pages: 1,
       },
     }),
+    export: vi.fn().mockResolvedValue({ blob: new Blob(['']), filename: 'audit-log.csv' }),
     verifyChain: vi.fn().mockResolvedValue({
-      data: {
-        verified: true,
-        total_entries: 42,
-        last_verification: '2025-01-15T12:00:00Z',
-      },
+      verified: true,
+      total_entries: 42,
     }),
   },
 }));
 
 vi.mock('@/store/visualizationStore', () => ({
-  useFormatTimestamp: () => (ts: string | null) => ts ?? '--',
+  useFormatTimestamp: () => (value: string | number | Date | null | undefined) =>
+    value == null ? '--' : String(value),
 }));
 
 function renderWithProviders(ui: React.ReactElement) {
@@ -72,6 +81,7 @@ describe('AuditLog', () => {
     renderWithProviders(<AuditLog />);
     expect(await screen.findByText('Chain Verified')).toBeInTheDocument();
     expect(await screen.findByText(/42 entries/)).toBeInTheDocument();
+    expect(screen.getByText(/Last checked:/)).toBeInTheDocument();
   });
 
   it('renders audit log entries in the table', async () => {
@@ -79,6 +89,8 @@ describe('AuditLog', () => {
     expect(await screen.findByText('admin@example.com')).toBeInTheDocument();
     expect(screen.getByText('operator@example.com')).toBeInTheDocument();
     expect(screen.getByText('192.168.1.1')).toBeInTheDocument();
+    expect(screen.getByText('settings/keylime')).toBeInTheDocument();
+    expect(screen.getByText('SUCCESS')).toBeInTheDocument();
   });
 
   it('renders severity filter dropdown', () => {
@@ -100,12 +112,17 @@ describe('AuditLog', () => {
     expect(screen.getByText('Export JSON')).toBeInTheDocument();
   });
 
-  it('renders broken chain status', async () => {
+  it('renders broken chain status with entry and reason', async () => {
     const { auditApi } = await import('@/api/audit');
     vi.mocked(auditApi.verifyChain).mockResolvedValueOnce({
-      data: { verified: false, total_entries: 10, last_verification: null },
-    } as never);
+      verified: false,
+      total_entries: 10,
+      broken_entry_id: 7,
+      reason: 'hash mismatch at entry 7',
+    });
     renderWithProviders(<AuditLog />);
     expect(await screen.findByText('Chain Broken')).toBeInTheDocument();
+    expect(screen.getByText(/Broken at entry #7/)).toBeInTheDocument();
+    expect(screen.getByText(/hash mismatch at entry 7/)).toBeInTheDocument();
   });
 });

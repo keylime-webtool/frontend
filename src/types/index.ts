@@ -4,7 +4,7 @@ export type { Attestation, AttestationSummary, AttestationTimelinePoint, Failure
 export type { Policy, PolicyVersion, PolicyImpactResult, PolicyKind, ApprovalState } from './policy';
 export type { Certificate, CertificateExpirySummary, CertificateStatus, CertificateTimelineEntry, CertificateType, ExpiryCategory, ValidationStatus } from './certificate';
 export type { Alert, AlertSummary, AlertSeverity, AlertState, AlertType } from './alert';
-export type { AuditLogEntry, HashChainStatus, AuditSeverity, AuditAction } from './audit';
+export type { AuditLogEntry, HashChainStatus, AuditSeverity } from './audit';
 
 export type UserRole = 'viewer' | 'operator' | 'admin';
 

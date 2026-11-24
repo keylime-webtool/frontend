@@ -1,39 +1,30 @@
-import type { Severity } from './severity';
-
-export type AuditSeverity = Severity;
-
-export type AuditAction =
-  | 'create_agent'
-  | 'read_agent'
-  | 'update_policy'
-  | 'delete_cert'
-  | 'approve_policy'
-  | 'login'
-  | 'logout'
-  | 'bulk_action'
-  | 'export_data'
-  | 'config_change';
-
-export type AuditResult = 'success' | 'denied' | 'error';
+export type AuditSeverity = 'CRITICAL' | 'WARNING' | 'INFO';
 
 export interface AuditLogEntry {
-  id: string;
+  id: number;
+  /** RFC 3339 */
   timestamp: string;
-  actor: string;
-  action: AuditAction;
-  resource_type: string;
-  resource_id: string;
-  result: AuditResult;
-  source_ip: string;
-  user_agent: string;
-  previous_entry_hash: string;
-  details: Record<string, unknown>;
   severity: AuditSeverity;
+  /** "system" until authentication lands (SR-001) */
+  actor: string;
+  /** Free-form: config_change, alert_action, integration_check, ... */
+  action: string;
+  /** Single field: "settings/keylime" or an alert UUID */
+  resource: string;
+  /** "unknown" for backend-initiated actions */
+  source_ip: string;
+  user_agent: string | null;
+  /** Free-form: SUCCESS, acknowledged, resolved, UNREACHABLE, "SUCCESS (12ms)" */
+  result: string;
+  /** 64 hex chars; 64 zeros for the genesis entry */
+  previous_hash: string;
+  entry_hash: string;
 }
 
 export interface HashChainStatus {
   verified: boolean;
-  last_verification: string;
   total_entries: number;
-  broken_at?: number;
+  /** Present only when the chain is broken (409 body) */
+  broken_entry_id?: number;
+  reason?: string;
 }

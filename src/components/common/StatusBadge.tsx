@@ -1,6 +1,6 @@
 import './common.css';
 
-type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+export type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 
 interface StatusBadgeProps {
   label: string;

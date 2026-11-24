@@ -1,10 +1,27 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/common/DataTable';
-import { StatusBadge } from '@/components/common/StatusBadge';
-import { auditApi } from '@/api/audit';
+import { StatusBadge, type BadgeVariant } from '@/components/common/StatusBadge';
+import { auditApi, type AuditExportFile, type AuditExportFormat } from '@/api/audit';
 import { useFormatTimestamp } from '@/store/visualizationStore';
 import type { AuditLogEntry } from '@/types';
+
+function resultBadgeVariant(result: string): BadgeVariant {
+  const normalized = result.toLowerCase();
+  if (normalized.startsWith('success')) return 'success';
+  if (/(unreachable|denied|error|fail)/.test(normalized)) return 'danger';
+  if (/(acknowledged|resolved)/.test(normalized)) return 'info';
+  return 'neutral';
+}
+
+function triggerDownload({ blob, filename }: AuditExportFile) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
 
 export function AuditLog() {
   const fmtTs = useFormatTimestamp();
@@ -16,11 +33,15 @@ export function AuditLog() {
     select: (res) => res.data,
   });
 
-  const { data: chainStatus } = useQuery({
+  const { data: chainStatus, dataUpdatedAt: chainCheckedAt } = useQuery({
     queryKey: ['audit-log', 'chain-status'],
     queryFn: () => auditApi.verifyChain(),
-    select: (res) => res.data,
   });
+
+  const handleExport = async (format: AuditExportFormat) => {
+    const file = await auditApi.export(format, { severity: severity || undefined });
+    triggerDownload(file);
+  };
 
   const columns = [
     {
@@ -33,7 +54,7 @@ export function AuditLog() {
       key: 'severity',
       header: 'Severity',
       sortable: true,
-      render: (row: AuditLogEntry) => <StatusBadge label={row.severity} />,
+      render: (row: AuditLogEntry) => <StatusBadge label={row.severity.toLowerCase()} />,
     },
     {
       key: 'action',
@@ -46,12 +67,14 @@ export function AuditLog() {
       ),
     },
     { key: 'actor', header: 'Actor', sortable: true },
-    { key: 'resource_type', header: 'Resource', sortable: true },
+    { key: 'resource', header: 'Resource', sortable: true },
     {
       key: 'result',
       header: 'Result',
       sortable: true,
-      render: (row: AuditLogEntry) => <StatusBadge label={row.result} />,
+      render: (row: AuditLogEntry) => (
+        <StatusBadge label={row.result} variant={resultBadgeVariant(row.result)} />
+      ),
     },
     { key: 'source_ip', header: 'Source IP' },
   ];
@@ -70,8 +93,13 @@ export function AuditLog() {
             variant={chainStatus.verified ? 'success' : 'danger'}
           />
           <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-            {chainStatus.total_entries} entries &middot; Last verified: {fmtTs(chainStatus.last_verification)}
+            {chainStatus.total_entries} entries &middot; Last checked: {fmtTs(chainCheckedAt)}
           </span>
+          {!chainStatus.verified && chainStatus.reason && (
+            <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+              Broken at entry #{chainStatus.broken_entry_id}: {chainStatus.reason}
+            </span>
+          )}
         </div>
       )}
 
@@ -89,6 +117,7 @@ export function AuditLog() {
         </select>
         <div style={{ flex: 1 }} />
         <button
+          onClick={() => handleExport('csv')}
           style={{
             padding: '8px 16px',
             border: '1px solid var(--color-border)',
@@ -101,6 +130,7 @@ export function AuditLog() {
           Export CSV
         </button>
         <button
+          onClick={() => handleExport('json')}
           style={{
             padding: '8px 16px',
             border: '1px solid var(--color-border)',
