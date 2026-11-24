@@ -14,6 +14,7 @@ import {
   ALERT_SEVERITY_COLORS, ALERT_TYPE_COLORS, ALERT_STATE_COLORS, ALERT_FALLBACK_COLOR,
 } from '@/constants/colors';
 import { createPieLabelRenderer } from '@/utils/pieLabel';
+import { humanizeLabel } from '@/utils/humanize';
 
 function buildChartData(items: Alert[], key: keyof Alert): { name: string; value: number }[] {
   const counts = new Map<string, number>();
@@ -85,8 +86,8 @@ function AlertPieChart({
           </Pie>
           <Legend
             formatter={(value: string) => (
-              <span style={{ textTransform: 'capitalize', cursor: 'pointer', fontSize: 12 }}>
-                {value.replace(/_/g, ' ')}
+              <span style={{ cursor: 'pointer', fontSize: 12 }}>
+                {humanizeLabel(value)}
               </span>
             )}
           />
@@ -138,11 +139,7 @@ export function Alerts() {
       key: 'type',
       header: 'Type',
       sortable: true,
-      render: (row: Alert) => (
-        <span style={{ textTransform: 'capitalize' }}>
-          {(row.type ?? '').replace(/_/g, ' ')}
-        </span>
-      ),
+      render: (row: Alert) => humanizeLabel(row.type),
     },
     { key: 'description', header: 'Description' },
     {

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { useFormatTimestamp } from '@/store/visualizationStore';
 import { agentsApi } from '@/api/agents';
+import { humanizeLabel } from '@/utils/humanize';
 import type { Certificate, CertificateType } from '@/types';
 
 interface AgentDetail {
@@ -156,7 +157,7 @@ function TimelineTab({ agentId }: { agentId: string }) {
                   </td>
                   <td className="data-table__td">
                     <StatusBadge
-                      label={ev.event.replace(/_/g, ' ')}
+                      label={humanizeLabel(ev.event)}
                       variant={EVENT_VARIANTS[ev.event]}
                     />
                   </td>

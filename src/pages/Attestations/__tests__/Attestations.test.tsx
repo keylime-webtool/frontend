@@ -75,7 +75,7 @@ describe('Attestations', () => {
 
   it('renders failure categorization with failure events', async () => {
     renderAttestations();
-    expect(await screen.findByText('pcr validation')).toBeInTheDocument();
+    expect(await screen.findByText('PCR Validation')).toBeInTheDocument();
     expect(await screen.findByText('PCR mismatch')).toBeInTheDocument();
     expect(await screen.findByText('agent-001')).toBeInTheDocument();
   });

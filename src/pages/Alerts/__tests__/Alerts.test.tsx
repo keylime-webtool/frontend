@@ -122,8 +122,8 @@ describe('Alerts page', () => {
 
   it('renders alert type column with formatted text', async () => {
     renderAlerts();
-    expect(await screen.findByText('attestation failure')).toBeInTheDocument();
-    expect(screen.getByText('cert expiry')).toBeInTheDocument();
+    expect(await screen.findByText('Attestation Failure')).toBeInTheDocument();
+    expect(screen.getByText('Cert Expiry')).toBeInTheDocument();
   });
 
   it('renders affected agents count', async () => {
