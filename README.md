@@ -31,6 +31,15 @@ The app runs at http://localhost:5173 by default. API requests are proxied to ht
 | `npm run lint`      | Run ESLint                         |
 | `npm run test`      | Run tests with Vitest              |
 
+## TypeScript Tooling
+
+TypeScript runs side by side, as recommended in the [TypeScript 7.0 announcement](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6-0):
+
+- `@typescript/native` aliases `typescript@7`, the native compiler that provides the `tsc` binary used for type checking and builds.
+- `typescript` aliases `@typescript/typescript6`, which keeps the JavaScript compiler API that `typescript-eslint` still requires (TypeScript 7 does not ship an API until 7.1).
+
+Once typescript-eslint supports the TypeScript 7.1 API, the `typescript6` alias can be dropped.
+
 ## Environment Variables
 
 Create a `.env.local` file to override defaults:
