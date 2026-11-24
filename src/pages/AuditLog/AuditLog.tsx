@@ -4,6 +4,7 @@ import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge, type BadgeVariant } from '@/components/common/StatusBadge';
 import { auditApi, type AuditExportFile, type AuditExportFormat } from '@/api/audit';
 import { useFormatTimestamp } from '@/store/visualizationStore';
+import { humanizeLabel } from '@/utils/humanize';
 import type { AuditLogEntry } from '@/types';
 
 function resultBadgeVariant(result: string): BadgeVariant {
@@ -60,11 +61,7 @@ export function AuditLog() {
       key: 'action',
       header: 'Action',
       sortable: true,
-      render: (row: AuditLogEntry) => (
-        <span style={{ textTransform: 'capitalize' }}>
-          {(row.action ?? '').replace(/_/g, ' ')}
-        </span>
-      ),
+      render: (row: AuditLogEntry) => humanizeLabel(row.action),
     },
     { key: 'actor', header: 'Actor', sortable: true },
     { key: 'resource', header: 'Resource', sortable: true },

@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { humanizeLabel } from './humanize';
 
 interface PieLabelConfig {
   colors: Record<string, string>;
@@ -22,10 +23,6 @@ interface PieLabelProps {
 
 const RADIAN = Math.PI / 180;
 
-function titleCase(s: string): string {
-  return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export function createPieLabelRenderer(config: PieLabelConfig) {
   const {
     colors,
@@ -33,7 +30,7 @@ export function createPieLabelRenderer(config: PieLabelConfig) {
     offset = 18,
     fontSize = 12,
     onClick,
-    formatLabel = (name, value) => `${titleCase(name)} (${value})`,
+    formatLabel = (name, value) => `${humanizeLabel(name)} (${value})`,
     getColor,
   } = config;
 

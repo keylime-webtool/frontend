@@ -8,6 +8,7 @@ import { KpiCard } from '@/components/common/KpiCard';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { attestationsApi } from '@/api/attestations';
 import { useFormatTimestamp } from '@/store/visualizationStore';
+import { humanizeLabel } from '@/utils/humanize';
 import { ATTESTATION_COLORS } from '@/constants/colors';
 
 interface FailureEvent {
@@ -92,7 +93,7 @@ export function Attestations() {
               {(failures as unknown as FailureEvent[]).map((f, i) => (
                 <li key={f.agent_id + i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--color-border)' }}>
                   <div>
-                    <div style={{ fontWeight: 500 }}>{(f.failure_type ?? '').replace(/_/g, ' ')}</div>
+                    <div style={{ fontWeight: 500 }}>{humanizeLabel(f.failure_type)}</div>
                     <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>{f.detail ?? ''}</div>
                     <Link to={`/agents/${f.agent_id}`} style={{ fontSize: '11px', color: 'var(--color-primary)', fontFamily: 'monospace', textDecoration: 'none' }}>{f.agent_id}</Link>
                   </div>

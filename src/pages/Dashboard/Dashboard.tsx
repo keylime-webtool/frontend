@@ -11,6 +11,7 @@ import { agentsApi } from '@/api/agents';
 import { alertsApi } from '@/api/alerts';
 import { useOutletContext, useNavigate } from 'react-router';
 import { useFormatTimestamp } from '@/store/visualizationStore';
+import { humanizeLabel } from '@/utils/humanize';
 import type { Alert } from '@/types';
 import {
   ALERT_SEVERITY_COLORS, ALERT_TYPE_COLORS, ALERT_STATE_COLORS, ALERT_FALLBACK_COLOR,
@@ -233,8 +234,8 @@ export function Dashboard() {
               </Pie>
               <Legend
                 formatter={(value: string) => (
-                  <span style={{ textTransform: 'capitalize', cursor: 'pointer' }}>
-                    {value.replace(/_/g, ' ')}
+                  <span style={{ cursor: 'pointer' }}>
+                    {humanizeLabel(value)}
                   </span>
                 )}
                 onClick={() => navigate('/alerts')}
