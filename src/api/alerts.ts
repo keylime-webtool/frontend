@@ -26,6 +26,10 @@ export const alertsApi = {
     return apiClient.post(`/alerts/${alertId}/resolve`, { resolution });
   },
 
+  dismiss(alertId: string) {
+    return apiClient.post(`/alerts/${alertId}/dismiss`);
+  },
+
   escalate(alertId: string) {
     return apiClient.post(`/alerts/${alertId}/escalate`);
   },

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Alerts } from '../Alerts';
@@ -22,9 +22,29 @@ vi.mock('@/api/alerts', () => ({
             state: 'acknowledged', description: 'Cert expiring soon',
             affected_agents: ['ag3'], created_timestamp: '2025-06-02T12:00:00Z',
           },
+          {
+            id: 'a3', severity: 'critical', type: 'pcr_change',
+            state: 'under_investigation', description: 'PCR value drift after kernel update',
+            affected_agents: ['ag4'], created_timestamp: '2025-06-03T09:00:00Z',
+          },
+          {
+            id: 'a4', severity: 'info', type: 'clock_skew',
+            state: 'resolved', description: 'Clock skew corrected after NTP resync',
+            affected_agents: ['ag5'], created_timestamp: '2025-06-04T08:00:00Z',
+          },
+          {
+            id: 'a5', severity: 'info', type: 'service_down',
+            state: 'dismissed', description: 'Service blip during maintenance',
+            affected_agents: [], created_timestamp: '2025-06-05T07:00:00Z',
+          },
         ],
       },
     }),
+    acknowledge: vi.fn().mockResolvedValue({ data: {} }),
+    investigate: vi.fn().mockResolvedValue({ data: {} }),
+    resolve: vi.fn().mockResolvedValue({ data: {} }),
+    dismiss: vi.fn().mockResolvedValue({ data: {} }),
+    escalate: vi.fn().mockResolvedValue({ data: {} }),
   },
 }));
 
@@ -72,15 +92,70 @@ describe('Alerts page', () => {
     expect(screen.getByLabelText('Filter by type')).toBeInTheDocument();
   });
 
-  it('renders Ack button for new alerts', async () => {
+  it('renders Acknowledge button for new alerts', async () => {
     renderAlerts();
-    expect(await screen.findByText('Ack')).toBeInTheDocument();
+    expect(await screen.findAllByRole('button', { name: 'Acknowledge' })).toHaveLength(1);
   });
 
   it('renders Investigate button for new and acknowledged alerts', async () => {
     renderAlerts();
     const investigateBtns = await screen.findAllByText('Investigate');
     expect(investigateBtns).toHaveLength(2);
+  });
+
+  it('offers exactly the backend-valid actions per state', async () => {
+    renderAlerts();
+    await screen.findByText('Agent failed attestation');
+    expect(screen.getAllByRole('button', { name: 'Acknowledge' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Investigate' })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: 'Resolve' })).toHaveLength(3);
+    expect(screen.getAllByRole('button', { name: 'Dismiss' })).toHaveLength(3);
+    expect(screen.getAllByRole('button', { name: 'Escalate' })).toHaveLength(3);
+  });
+
+  it('renders no action buttons for resolved and dismissed alerts', async () => {
+    renderAlerts();
+    const resolvedRow = (await screen.findByText('Clock skew corrected after NTP resync')).closest('tr');
+    expect(resolvedRow).not.toBeNull();
+    expect(within(resolvedRow!).queryByRole('button')).toBeNull();
+    const dismissedRow = screen.getByText('Service blip during maintenance').closest('tr');
+    expect(within(dismissedRow!).queryByRole('button')).toBeNull();
+  });
+
+  it('acknowledges a new alert when Acknowledge is clicked', async () => {
+    const { alertsApi } = await import('@/api/alerts');
+    renderAlerts();
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Acknowledge' }))[0]);
+    await waitFor(() => expect(vi.mocked(alertsApi.acknowledge)).toHaveBeenCalledWith('a1'));
+  });
+
+  it('dismisses an acknowledged alert when Dismiss is clicked', async () => {
+    const { alertsApi } = await import('@/api/alerts');
+    renderAlerts();
+    const acknowledgedRow = (await screen.findByText('Cert expiring soon')).closest('tr');
+    fireEvent.click(within(acknowledgedRow!).getByRole('button', { name: 'Dismiss' }));
+    await waitFor(() => expect(vi.mocked(alertsApi.dismiss)).toHaveBeenCalledWith('a2'));
+  });
+
+  it('shows the backend error message when a mutation is rejected', async () => {
+    const { alertsApi } = await import('@/api/alerts');
+    vi.mocked(alertsApi.acknowledge).mockRejectedValueOnce({
+      response: {
+        status: 400,
+        data: {
+          error: {
+            code: 'BAD_REQUEST',
+            message: 'cannot acknowledge alert in dismissed state — must be New',
+          },
+        },
+      },
+    });
+    renderAlerts();
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Acknowledge' }))[0]);
+    const banner = await screen.findByRole('alert');
+    expect(banner).toHaveTextContent('cannot acknowledge alert in dismissed state — must be New');
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss error' }));
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('renders pie chart section titles', async () => {
