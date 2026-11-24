@@ -232,7 +232,14 @@ export function Alerts() {
       key: 'state',
       header: 'State',
       sortable: true,
-      render: (row: Alert) => <StatusBadge label={row.state} />,
+      render: (row: Alert) => (
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <StatusBadge label={row.state} />
+          {(row.escalation_count ?? 0) > 0 && (
+            <StatusBadge label={`Escalated ×${row.escalation_count}`} variant="warning" />
+          )}
+        </div>
+      ),
     },
     {
       key: 'created_timestamp',

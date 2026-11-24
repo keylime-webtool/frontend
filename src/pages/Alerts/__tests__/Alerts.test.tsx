@@ -21,6 +21,7 @@ vi.mock('@/api/alerts', () => ({
             id: 'a2', severity: 'warning', type: 'cert_expiry',
             state: 'acknowledged', description: 'Cert expiring soon',
             affected_agents: ['ag3'], created_timestamp: '2025-06-02T12:00:00Z',
+            escalation_count: 2,
           },
           {
             id: 'a3', severity: 'critical', type: 'pcr_change',
@@ -135,6 +136,19 @@ describe('Alerts page', () => {
     const acknowledgedRow = (await screen.findByText('Cert expiring soon')).closest('tr');
     fireEvent.click(within(acknowledgedRow!).getByRole('button', { name: 'Dismiss' }));
     await waitFor(() => expect(vi.mocked(alertsApi.dismiss)).toHaveBeenCalledWith('a2'));
+  });
+
+  it('escalates an alert when Escalate is clicked', async () => {
+    const { alertsApi } = await import('@/api/alerts');
+    renderAlerts();
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Escalate' }))[0]);
+    await waitFor(() => expect(vi.mocked(alertsApi.escalate)).toHaveBeenCalledWith('a1'));
+  });
+
+  it('shows the escalation count next to the state for escalated alerts', async () => {
+    renderAlerts();
+    const acknowledgedRow = (await screen.findByText('Cert expiring soon')).closest('tr');
+    expect(within(acknowledgedRow!).getByText('Escalated ×2')).toBeInTheDocument();
   });
 
   it('shows the backend error message when a mutation is rejected', async () => {
