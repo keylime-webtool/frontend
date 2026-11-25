@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   PieChart, Pie, Cell, Legend, ResponsiveContainer,
 } from 'recharts';
@@ -9,7 +9,7 @@ import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { alertsApi } from '@/api/alerts';
 import { useFormatTimestamp } from '@/store/visualizationStore';
-import type { Alert } from '@/types';
+import type { Alert, AlertState } from '@/types';
 import {
   ALERT_SEVERITY_COLORS, ALERT_TYPE_COLORS, ALERT_STATE_COLORS, ALERT_FALLBACK_COLOR,
 } from '@/constants/colors';
@@ -97,6 +97,70 @@ function AlertPieChart({
   );
 }
 
+type AlertActionName = 'acknowledge' | 'investigate' | 'resolve' | 'dismiss' | 'escalate';
+
+const ROW_ACTIONS: Record<AlertState, readonly AlertActionName[]> = {
+  new: ['acknowledge', 'investigate', 'resolve', 'dismiss', 'escalate'],
+  acknowledged: ['investigate', 'resolve', 'dismiss', 'escalate'],
+  under_investigation: ['resolve', 'dismiss', 'escalate'],
+  resolved: [],
+  dismissed: [],
+};
+
+const ACTION_LABELS: Record<AlertActionName, string> = {
+  acknowledge: 'Acknowledge',
+  investigate: 'Investigate',
+  resolve: 'Resolve',
+  dismiss: 'Dismiss',
+  escalate: 'Escalate',
+};
+
+function useAlertAction(
+  action: (alertId: string) => Promise<unknown>,
+  onFailure: (message: string) => void,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: action,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['alerts'] }),
+    onError: (error) => onFailure(backendErrorMessage(error)),
+  });
+}
+
+function backendErrorMessage(error: unknown): string {
+  const response = (error as { response?: { data?: { error?: { message?: string } } } })
+    ?.response;
+  return response?.data?.error?.message ?? 'Alert action failed';
+}
+
+function ActionButton({
+  label,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: '4px 8px',
+        fontSize: '11px',
+        border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-sm)',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text)',
+        opacity: disabled ? 0.6 : 1,
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 export function Alerts() {
   const fmtTs = useFormatTimestamp();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -128,6 +192,23 @@ export function Alerts() {
     [alerts]
   );
 
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  // assigned_to and resolution are sent as empty payloads until prompting
+  // for input is built; the backend treats both fields as optional.
+  const acknowledge = useAlertAction((id) => alertsApi.acknowledge(id), setActionError);
+  const investigate = useAlertAction((id) => alertsApi.investigate(id), setActionError);
+  const resolve = useAlertAction((id) => alertsApi.resolve(id), setActionError);
+  const dismiss = useAlertAction((id) => alertsApi.dismiss(id), setActionError);
+  const escalate = useAlertAction((id) => alertsApi.escalate(id), setActionError);
+
+  const actions = { acknowledge, investigate, resolve, dismiss, escalate };
+
+  const isRowBusy = (alertId: string) =>
+    Object.values(actions).some(
+      (mutation) => mutation.isPending && mutation.variables === alertId,
+    );
+
   const columns = [
     {
       key: 'severity',
@@ -151,7 +232,14 @@ export function Alerts() {
       key: 'state',
       header: 'State',
       sortable: true,
-      render: (row: Alert) => <StatusBadge label={row.state} />,
+      render: (row: Alert) => (
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <StatusBadge label={row.state} />
+          {(row.escalation_count ?? 0) > 0 && (
+            <StatusBadge label={`Escalated ×${row.escalation_count}`} variant="warning" />
+          )}
+        </div>
+      ),
     },
     {
       key: 'created_timestamp',
@@ -164,34 +252,14 @@ export function Alerts() {
       header: 'Actions',
       render: (row: Alert) => (
         <div style={{ display: 'flex', gap: '4px' }}>
-          {row.state === 'new' && (
-            <button
-              style={{
-                padding: '4px 8px',
-                fontSize: '11px',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--color-surface)',
-                color: 'var(--color-text)',
-              }}
-            >
-              Ack
-            </button>
-          )}
-          {(row.state === 'new' || row.state === 'acknowledged') && (
-            <button
-              style={{
-                padding: '4px 8px',
-                fontSize: '11px',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--color-surface)',
-                color: 'var(--color-text)',
-              }}
-            >
-              Investigate
-            </button>
-          )}
+          {(ROW_ACTIONS[row.state] ?? []).map((action) => (
+            <ActionButton
+              key={action}
+              label={ACTION_LABELS[action]}
+              disabled={isRowBusy(row.id)}
+              onClick={() => actions[action].mutate(row.id)}
+            />
+          ))}
         </div>
       ),
     },
@@ -297,6 +365,36 @@ export function Alerts() {
           <option value="clock_skew">Clock Skew</option>
         </select>
       </div>
+
+      {actionError && (
+        <div
+          role="alert"
+          className="section"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 20px',
+            border: '1px solid var(--color-danger)',
+          }}
+        >
+          <span style={{ fontSize: '14px', color: 'var(--color-danger)' }}>{actionError}</span>
+          <button
+            onClick={() => setActionError(null)}
+            aria-label="Dismiss error"
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--color-text)',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            &#x2715;
+          </button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="placeholder">
